@@ -1,0 +1,11 @@
+.shadow (@horizontal_offset:5px, @vertical_offset:5px, @blur_radius:5px, @color: rgba(0,0,0,0.2)) {
+  box-shadow: @horizontal_offset @vertical_offset @blur_radius @color;
+  -moz-box-shadow: @horizontal_offset @vertical_offset @blur_radius @color;
+  -webkit-box-shadow: @horizontal_offset @vertical_offset @blur_radius @color;
+}
+
+.inner_shadow (@horizontal_offset:5px, @vertical_offset:5px, @blur_radius:5px, @color: rgba(0,0,0,0.2)) {
+  box-shadow: inset @horizontal_offset @vertical_offset @blur_radius @color;
+  -moz-box-shadow: inset @horizontal_offset @vertical_offset @blur_radius @color;
+  -webkit-box-shadow: inset @horizontal_offset @vertical_offset @blur_radius @color;
+}
