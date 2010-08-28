@@ -11,7 +11,20 @@ exports.connect = function(cb) {
     client.open(function(err, client) {
         var con = {client: client};
         
-        con.get_bubble = function(id) {
+        con.create_bubble = function(content, id, cb) {
+            bubble = {content: name, subs: [], users: []};
+            client.collection('bubbles', function(err, coll) {
+                coll.insert(bubble, function(err, res) {
+                    if(err) {
+                        cb(null);
+                    } else {
+                        cb(get_bubble(id));
+                    }
+                });
+            });
+        }
+        
+        var get_bubble = con.get_bubble = function(id) {
             var bubble = {id: id};
             
             var findOne = function(criteria, select, cb) {
