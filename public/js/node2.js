@@ -1,6 +1,23 @@
 $(document).ready(function(){
 
-$(".holder").animate({width:'-=15px'}, 500);
+var initNode = function (_node) {
+    var node = $(_node);
+    var holder = node.find(".holder");
+    initSpring(node);
+    node.hover(
+        function () {$(this).addClass("fixed");},
+        function () {$(this).removeClass("fixed");}
+    );
+    var h = holder.height();//var h = holder.parent().find(".body").height();
+    holder.animate({width:'-=15px', height:h+"px"}, 500);
+    holder.hover(
+        function () {$(this).animate({width:'+=15px'}, 100).parent().animate({marginLeft:'-=15px'},100);},//handleIn
+        function () {$(this).animate({width:'-=15px'}, 100).parent().animate({marginLeft:'+=15px'},100);} //handleOut
+    );
+};
+$(".node").each(function (_, _node) {initNode(_node);});
+updateCanvas();
+setInterval("updateSprings(1/100)",100);
 
 // helpers
   // firefox workaround
@@ -20,7 +37,7 @@ $(".holder").animate({width:'-=15px'}, 500);
   }
   
   var id_for_json = function(obj){
-    return $.each( obj.slice(2).split('_'), function(ele){ parseInt(ele) })
+    return $.each( obj.slice(2).split('_'), function(_,ele){ return parseInt(ele) })
   }
   
   // triggers
@@ -37,23 +54,9 @@ $(".holder").animate({width:'-=15px'}, 500);
     })
   }
 
-initSprings();
-updateCanvas();
-setInterval("updateSprings(1/100)",100);
-
 // draggable
 var draggable_options = {drag:updateCanvas}
 $(".draggable").draggable( draggable_options );
-
-$(".holder").hover(
-    function () {$(this).animate({width:'+=15px'}, 100).parent().animate({marginLeft:'-=15px'},100);},//handleIn
-    function () {$(this).animate({width:'-=15px'}, 100).parent().animate({marginLeft:'+=15px'},100);} //handleOut
-);
-
-$(".node").hover(
-    function () {$(this).addClass("fixed");},
-    function () {$(this).removeClass("fixed");}
-);
 
 // init part 1
   // create socket
@@ -92,24 +95,26 @@ var change_color = function(color){
   // changing tree structure
   draw_node = function(node, par_id){
   console.log(node, par_id)
-    var html_id = id_for_html(par_id) + '_' + $('.'+ id_for_html(par_id)).length
-    $('#protonode').clone().
+    var html_id = id_for_html(par_id) + '_' + ($('.'+ id_for_html(par_id)).length )
+    obj = $('#protonode').clone().
                   attr('id', html_id ).
-                  addClass('class', id_for_html(par_id)).
-                  attr('rel', id_for_html(par_id)).
+                  addClass(id_for_html(par_id)).
+                  attr('relation', id_for_html(par_id)).
                   draggable(draggable_options).
-                  appendTo('#nodes').
-                  fadeIn(100)
+                  appendTo('#nodes').fadeIn(100);
+    initNode(obj);
+    obj.find("p").html("new");
     if(node.subs){
-      $.each(function(cur){
+      $.each(node.subs, function(_,cur){
         draw_node(cur, id_for_json(html_id) )
-      })
+      });
     }
   }
 
 var draw_all_nodes =  function(node){
-  console.log( node )
-  draw_node(node.subs[0], [0])
+  console.log('z', node )
+  draw_node(node.subs[0].subs[0], [0]);
+  $('#n_0_0').addClass("root").find("p").html("root");
 }
 
 
@@ -164,34 +169,34 @@ $('#change_name_form').submit(function(){
   return false
 })
 
-$('#change_color').click(function(){
+$('#change_color').live('click',function(){
   var color = 'blue' // ...
   change_color(color)
 })
 
-$('.add_node').click(function(){
+$('.add_node').live('click', function(){
   var to_id = id_for_json( get_node_id(this) )
   add_node('', to_id)
   return false
 })
 
 /*
-$('.node').function(){ //TODO jquery hook
+$('.node').funclivetion(){ //TODO jquery hook
   var node_id = get_node_id(this)
   var to_id   = // ...
   move_node(node_id, content)
 })
 */
 
-$('.delete_node').click(function(){
+$('.delete_node').live('click', function(){
   var node_id = get_node_id(this)
   delete_node(node_id)
   return false
 })
 
-$('.edit_content').click(function(){
+$('.edit_content').live('click', function(){
   var node_id = get_node_id(this)
-  var content = //...
+  var content = '5'//...
   edit_content(node_id, content)
 })
 
@@ -216,8 +221,9 @@ $('.node p').live('dblclick', function(){
   
 })
 
-var inplace_restore_p = function(ele){
+var inplace_submit_and_restore_p = function(ele){
   $(ele).replaceWith('<p>' + $(ele).val() + '</p>')
+  edit_content( get_node_id(this), $(ele).val() )
 }
 $("input.in-place-edit").live('keypress', function (e) {
   if( e.which == 13 ){
@@ -228,7 +234,7 @@ $("input.in-place-edit").live('keypress', function (e) {
   }
 })
 $("input.in-place-edit").live('blur', function () {
-  inplace_restore_p(this)
+  inplace_submit_and_restore_p(this)
 })
 
 
@@ -250,7 +256,7 @@ socket.on('message', function(msg) {
         break;case 'registered':
           //draw_all_nodes(val.root_node)
         break;case 'node_data':
-          //draw_all_nodes(val.bubble)
+          draw_all_nodes(val.bubble)
         break;case 'name_changed':
           // .. 
         break;case 'color_changed':
