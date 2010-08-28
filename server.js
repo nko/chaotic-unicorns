@@ -100,7 +100,7 @@ db.connect(function(dbc) {
                     // sending the tree
                     bubble.get_tree(function(tree) {
                         console.log(tree);
-                        client.send(tree);
+                        client.send(JSON.stringify({node_data: {bubble: tree}}));
                     });
                     
                     // session management
@@ -124,7 +124,7 @@ db.connect(function(dbc) {
                 } else if(stanza.add_node) {
                     if(session) {
                         d = stanza.add_node;
-                        bubble.add_tree(d.to, d.content, function() {
+                        bubble.add_node(d.to, d.content, function() {
                             // tell your friends
                             session.broadcast(JSON.stringify({
                               node_added:{
@@ -139,7 +139,7 @@ db.connect(function(dbc) {
                 } else if(stanza.delete_node) {
                     if(session) {
                         // TODO: fake!
-                        session.broadcast(JSON.stringify({
+                        session.broadcast( JSON.stringify({
                           node_deleted: {id: stanza.delete_node.id }
                         }) );
                     } else {
