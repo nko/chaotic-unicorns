@@ -1,71 +1,85 @@
-= ChAoTiC UnIcOrNs =
+# node² by ChAoTiC UnIcOrNs
 
-== TODO ==
+## TODO
 
 * Homepage (+ bubble creation)
-
-...
+* ...
 * user documentation
 
-== Naming Conventions ==
+## Naming Conventions
 
 bubble: a set of mindmaps; identified by an id
 
-== Protocol ==
+## Protocol
 
-=== Conventions ===
+### Conventions
 
-node-id: tree-path ([1,0,4])
+### node-id
 
-method-invocation: {$method_name: {$arg1: a, $arg2: b, ...}}
+    tree-path ([1,0,4])
 
-=== Methods ===
+### method-invocation
 
-# user management
-register(name, color) => bool
-change_name(name) => bool
-change_color(color) => bool
-user_list() => [{name: '', color: ''}, ...]
+    {$method_name: {$arg1: a, $arg2: b, ...}}
 
-# changing tree structure
-add_node(content, to) => bool
-move_node(id, to) => bool
-delete_node(id) => bool
+### Methods
 
-# changing properties
-change_position(id, $DODO_FRAGEN) => bool
-edit_content(id, content) => bool
+    # user management
+    register(name, color) => bool
+    change_name(name) => bool
+    change_color(color) => bool
+    user_list() => [{name: '', color: ''}, ...]
 
-=== Signals ===
+    # changing tree structure
+    add_node(content, to) => bool
+    move_node(id, to) => bool
+    delete_node(id) => bool
 
-# user management
-registered(name, color)
-left(name)
-name_changed(old, new)
-color_changed(name, color)
+    # changing properties
+    change_position(id, $DODO_FRAGEN) => bool
+    edit_content(id, content) => bool
 
-# changing tree structure
-node_added(content, to)
-node_moved(id, to)
-node_deleted(id)
+### Signals
 
-# changing properties
-position_changed(id, $DODO_FRAGEN)
-content_edited(id, content)
+    # user management
+    registered(name, color)
+    left(name)
+    name_changed(old, new)
+    color_changed(name, color)
 
-== Data Structure ==
+    # changing tree structure
+    node_added(content, to)
+    node_moved(id, to)
+    node_deleted(id)
 
-=== node ===
+    # changing properties
+    position_changed(id, $DODO_FRAGEN)
+    content_edited(id, content)
 
-{
-    content: '',
-    sub: [nodes],
-}
+## Data Structure
 
-=== bubble ===
+### node
+
+    {
+        content: '',
+        subs: [nodes],
+    }
+
+### bubble
 
 node with
 
-{
-    users: [{name: '', color: ''}, ...] 
-}
+    {
+        content: 'bubble name',
+        subs: [$mindmap_node, ...],
+        users: [{name: '', color: ''}, ...],
+    }
+
+### mindmap
+
+node with
+
+    {
+        content: 'mindmap name',
+        subs: [$node, ...],
+    }
