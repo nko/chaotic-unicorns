@@ -39,7 +39,7 @@ $(".holder").animate({width:'-=15px'}, 500);
 
 initSprings();
 updateCanvas();
-setInterval("updateSprings(100)",100);
+setInterval("updateSprings(1/20)",20);
 
 // draggable
 var draggable_options = {drag:updateCanvas}
