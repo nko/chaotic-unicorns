@@ -1,4 +1,5 @@
 $(document).ready(function(){
+
 $(".holder").animate({width:'-=15px'}, 500);
 
 // helpers
@@ -24,15 +25,10 @@ $(".holder").animate({width:'-=15px'}, 500);
     setTimeout("$('#" + id + "').remove()",100)
   }
 
-//canvas
-/*
-var updateCanvas = function (name) {
-    var elmnt
-};
-*/
+updateCanvas();
 
 // draggable
-$(".draggable").draggable();
+$(".draggable").draggable({drag:updateCanvas});
 
 $(".holder").hover(
     function () {$(this).animate({width:'+=15px'}, 100);},//handleIn
@@ -52,8 +48,14 @@ $(".holder").hover(
 
 // messages to server
   // user management
-var register = function(name, color){
-
+var register = function(name, color, hash){
+  socket.send(json_plz({
+    register: {
+      'name': name,
+      'color': color,
+      'id': hash,
+    }
+  }) )
 }
 
 var change_name = function(name){
@@ -156,7 +158,7 @@ $('.node').function(){ //TODO jquery hook
 */
 
 $('#create_bubble_form').submit(function(){
-  var name = 'unicorn\'s bubble' // ...
+  var name = $(this).find('input[type=text]').val();
   create_bubble(name)
   return false
 })
@@ -193,6 +195,8 @@ socket.on('message', function(msg) {
           // .. 
         break;case 'content_edited':
           // .. 
+        break;case 'bubble_created':
+          location.href = '/' + val.hash
         break;default:
           // .. 
         break;
@@ -207,8 +211,7 @@ socket.connect();
 
 var initial_name = 'chaot' // ...
 var initial_color = 'red' // ...
-register(initial_name, initial_color)
-
+register(initial_name, initial_color, location.pathname.slice(1)) // TODO hidden
 
 // close (document ready)
 });
