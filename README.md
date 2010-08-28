@@ -5,10 +5,21 @@
 * Homepage (+ bubble creation)
 * ...
 * user documentation
+* "catch attention" with blinking nodes
 
-* jan
-  * bubble erstellen
-  * bubble_id in register
+frontend
+
+* nodes positionierung
+* nodes moven
+* ...
+
+backend
+
+* ...
+
+jan
+
+* koord system bauen
 
 ## Naming Conventions
 
@@ -91,6 +102,7 @@ tree-path ([1,0,4])
 node with
 
     {
+        id: 'hash',
         content: 'bubble name',
         subs: [$mindmap_node, ...],
         users: [{name: '', color: ''}, ...],
