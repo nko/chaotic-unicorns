@@ -1,7 +1,8 @@
-
 /**
  * Module dependencies.
  */
+
+require.paths.unshift(__dirname + '/lib');
 
 var express = require('express'),
     connect = require('connect');
@@ -30,7 +31,7 @@ app.configure('production', function(){
 // Routes
 
 app.get('/', function(req, res){
-    res.render('index.jade', {
+    res.render('index.haml', {
         locals: {
             title: 'Express'
         }
@@ -39,4 +40,7 @@ app.get('/', function(req, res){
 
 // Only listen on $ node app.js
 
-if (!module.parent) app.listen(3000);
+if (!module.parent) {
+    app.listen(process.env.PORT || 3000);
+    console.log("server listening on port %d ...", app.address().port)
+}
