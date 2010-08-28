@@ -67,7 +67,7 @@ db.connect(function(dbc) {
         var session_manager = session.session_manager();
         
         ios.on('connection', function(client) {
-            var bubble, session;
+            var bubble, session, user;
             
             var error = function(msg) {
                 client.send(JSON.stringify({err: {msg: msg}}));
@@ -81,6 +81,7 @@ db.connect(function(dbc) {
                 console.log('bye client')
                 if(session) {
                     session.remove_client(client);
+                    session.broadcast({left: {name: user.name}});
                 }
             });
         
@@ -89,8 +90,22 @@ db.connect(function(dbc) {
                 stanza = JSON.parse(msg);
                 
                 if(stanza.register) {
-                    // TODO: color and name
-                    session = session_manager.get(stanza.register.hash);
+                    // TODO: move bubble into session?
+                    d = stanza.register
+                    
+                    // db-abstraction
+                    bubble = dbc.get_bubble(d.hash);
+                    user = bubble.create_user(d.name, d.color);
+                    
+                    // sending the tree
+                    bubble.get_tree(function(tree) {
+                        console.log(tree);
+                        client.send(tree);
+                    });
+                    
+                    // session management
+                    session = session_manager.get(d.hash);
+                    session.broadcast({registered: {name: d.name, color: d.color}})
                     session.add_client(client);
                 } else if(stanza.create_bubble) {
                     dbc.create_bubble(stanza.create_bubble.name, function(bubble) {
@@ -98,15 +113,26 @@ db.connect(function(dbc) {
                             bubble_created: {hash: bubble.hash}
                         }));
                     });
+                } else if(stanza.change_color) {
+                    color = stanza.change_color.color;
+                    user.set_color(color);
+                    session.broadcast({color_changed: {color: color}});
+                } else if(stanza.change_name) {
+                    name = stanza.change_name.name;
+                    user.set_name(name);
+                    session.broadcast({color_changed: {name: name}});
                 } else if(stanza.add_node) {
                     if(session) {
-                        // TODO: fake?
-                        session.broadcast(JSON.stringify({
-                          node_added:{
-                            id: stanza.add_node.id,
-                            to: stanza.add_node.to,
-                          }
-                        }) );
+                        d = stanza.add_node;
+                        bubble.add_tree(d.to, d.content, function() {
+                            // tell your friends
+                            session.broadcast(JSON.stringify({
+                              node_added:{
+                                id: stanza.add_node.id,
+                                to: stanza.add_node.to,
+                              }
+                            }) );
+                        });
                     } else {
                         error("No session");
                     }
