@@ -14,18 +14,18 @@ bubble: a set of mindmaps; identified by an id
 
 ### Conventions
 
-### node-id
+#### node-id
 
-    tree-path ([1,0,4])
+tree-path ([1,0,4])
 
-### method-invocation
+#### method-invocation
 
     {$method_name: {$arg1: a, $arg2: b, ...}}
 
 ### Methods
 
     # user management
-    register(name, color) => bool
+    register(name, color) => $root_node or null
     change_name(name) => bool
     change_color(color) => bool
     user_list() => [{name: '', color: ''}, ...]
@@ -62,7 +62,7 @@ bubble: a set of mindmaps; identified by an id
 
     {
         content: '',
-        subs: [nodes],
+        subs: [$node, ...],
     }
 
 ### bubble
