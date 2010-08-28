@@ -6,6 +6,10 @@
 * ...
 * user documentation
 
+* jan
+  * bubble erstellen
+  * bubble_id in register
+
 ## Naming Conventions
 
 bubble: a set of mindmaps; identified by an id
@@ -25,27 +29,44 @@ tree-path ([1,0,4])
 ### Methods
 
     # user management
-    register(name, color) => $root_node or null
-    change_name(name) => bool
-    change_color(color) => bool
-    user_list() => [{name: '', color: ''}, ...]
+    register(bubble_id, name, color)
+    change_name(name)
+    change_color(color)
+    user_list()
 
     # changing tree structure
-    add_node(content, to) => bool
-    move_node(id, to) => bool
-    delete_node(id) => bool
+    add_node(content, to)
+    move_node(id, to)
+    delete_node(id)
 
     # changing properties
-    change_position(id, $DODO_FRAGEN) => bool
-    edit_content(id, content) => bool
+    change_position(id, $DODO_FRAGEN)
+    edit_content(id, content)
+
+    # bubble management
+    create_bubble(name)
 
 ### Signals
+
+#### Personal Messages
+
+    # error message
+    error(msg)
+
+    # after registering
+    node_data(root_node)
+
+    # bubble creation
+    bubble_created(id)
+
+#### Broadcasts
 
     # user management
     registered(name, color)
     left(name)
     name_changed(old, new)
     color_changed(name, color)
+    user_list([{name: '', color: ''}, ...])
 
     # changing tree structure
     node_added(content, to)
