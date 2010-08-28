@@ -73,13 +73,18 @@ db.connect(function(dbc) {
                 stanza = JSON.parse(msg);
                 
                 if(stanza.create_bubble) {
-                    dbc.create_bubble(stanza.name, function(bubble) {
+                    dbc.create_bubble(stanza.create_bubble.name, function(bubble) {
                         client.send(JSON.stringify({
                             bubble_created: {id: bubble.id}
                         }));
                     });
-                } else {
-                    client.send(JSON.stringify(true));
+                } else if(stanza.delete_node) {
+                    // TODO: fake!
+                    client.send(JSON.stringify({
+                      node_deleted: {id: stanza.delete_node.id }
+                    }) );
+                }else {
+                    client.send(JSON.stringify({err: {msg: "Unknown method"}}));
                 }
             });
         });
