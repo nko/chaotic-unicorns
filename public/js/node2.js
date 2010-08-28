@@ -1,10 +1,13 @@
 $(document).ready(function(){
 $(".holder").animate({width:'-=15px'}, 500);
 
-
 // helpers
   // firefox workaround
   if(typeof(console) == 'undefined') console = {log: function () {}};
+
+  // less debug typing
+  var clog = function(str){ console.log(str) }
+  
   
   // json
   var json_plz = function(obj){
@@ -19,17 +22,16 @@ $(".holder").hover(
     function () { $(this).animate({width:'-=15px'}, 100);} //handleOut
 );
 
-// socket test code ...
-var socket = new io.Socket(location.hostname, {
+
+// init part 1
+  // create socket
+  var socket = new io.Socket(location.hostname, {
     transports: ['websocket', 'xhr-polling', 'xhr-multipart', 'server-events', 'htmlfile', 'flashsocket']
-});
-socket.on('connect', function() {
+  });
+  
+  socket.on('connect', function() {
     console.log('socket connected');
-});
-socket.on('message', function(msg) {
-    console.log('message incoming: ' + msg);
-});
-socket.connect();
+  });
 
 // messages to server
   // user management
@@ -39,37 +41,57 @@ var register = function(name, color){
 
 var change_name = function(name){
   socket.send(json_plz({
-    change_name: name
+    change_name: {'name': name,}
   }) )
 }
 
 var change_color = function(color){
-
+  socket.send(json_plz({
+    change_color: {'color': color,}
+  }) )
 }
 
   // changing tree structure
 var add_node =  function(to){
+  socket.send(json_plz({
+    add_node: {'to': to,}
+  }) )
 }
 
 var move_node = function(id, to){
+  socket.send(json_plz({
+    move_node: {'id': id, 'to': to,}
+  }) )
 }
 
 var delete_node = function(id){
+  socket.send(json_plz({
+    delete_node: {'id': id,}
+  }) )
 }
 
   // changing properties
 var edit_content = function(id, content){
+  socket.send(json_plz({
+    edit_content: {'id': id, 'content': content,}
+  }) )
 }
 
 var change_position = function(id, $DODO){
+  socket.send(json_plz({
+    edit_content: {'id': id, '$DODO': $DODO,}
+  }) )
+}
+
+// bubble management
+
+var create_bubble = function(name){
+  socket.send(json_plz({
+    create_bubble: {'name': name,}
+  }) )
 }
 
 // triggers
-
-/* register: at init */
-var initial_name = 'chaot' // ...
-var initial_color = 'red' // ...
-register(initial_name, initial_color)
 
 $('#change_name_form').submit(function(){
   var name = 'unicorn' // ...
@@ -114,6 +136,61 @@ $('.node').function(){ //TODO jquery hook
   change_position(node_id, content)
 })
 */
+
+$('#create_bubble_form').submit(function(){
+  var name = 'unicorn\'s bubble' // ...
+  create_bubble(name)
+  return false
+})
+
+
+// signals
+
+// socket test code ...
+socket.on('message', function(msg) {
+  console.log('message incoming: ' + msg);
+  msg = JSON.parse( msg )
+  
+  for ( prop in  msg){
+    if (typeof msg[prop] !== 'function'){ // enum only props
+      val = msg[prop]
+      switch(prop){
+        case 'debug':
+          console.log('_debug: ' + val.msg)
+        break;case 'error':
+          console.log('ERROR: ' + val.msg)
+        break;case 'registered':
+          // .. val.rootnode
+        break;case 'name_changed':
+          // .. 
+        break;case 'color_changed':
+          // .. 
+        break;case 'node_added':
+          // .. 
+        break;case 'node_moved':
+          // .. 
+        break;case 'node_deleted':
+          // .. 
+        break;case 'position_changed':
+          // .. 
+        break;case 'content_edited':
+          // .. 
+        break;default:
+          // .. 
+        break;
+      }
+    }
+  }
+});
+
+
+// init part 2
+socket.connect();
+
+var initial_name = 'chaot' // ...
+var initial_color = 'red' // ...
+register(initial_name, initial_color)
+
 
 // close (document ready)
 });
