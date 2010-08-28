@@ -1,4 +1,4 @@
-var mongo = require('./lib/mongo');
+var mongo = require('./lib/mongodb');
 
 exports.connect = function(cb) {
     var host = process.env['MONGO_NODE_DRIVER_HOST'] != null ?

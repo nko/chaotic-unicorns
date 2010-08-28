@@ -1,6 +1,43 @@
+@import "public/css/include/rounded_corners";
+@import "public/css/include/shadows";
+
+@node_size:66px;
+
+
+
 body {
   padding: 0px;
   margin: 0px;
   font: 10px "Lucida Grande", "Helvetica Nueue", Arial, sans-serif;
-  color:red;
+}
+
+#title_bar {
+  position:absolute;
+  border:1px solid red;
+  width:80%;
+  height:50px;
+  left:10%;
+}
+
+#tool_bar {
+  position:absolute;
+  border:1px solid blue;
+  height:80%;
+  width:77px;
+  top:10%;
+}
+
+
+.node {
+  border:1px solid black;
+  position:absolute;
+  min-width:@node_size;
+  min-height:@node_size;
+}
+
+
+#root {
+  border:1px solid magenta;
+  top:50%;
+  left:50%;
 }
