@@ -49,7 +49,12 @@ exports.connect = function(cb) {
                     
                     node = create_node(content);
                     mindmap = {content: content, subs: [node]};
-                    bubble = {hash: random_hash(), content: content, subs: [mindmap], users: []};
+                    bubble = {
+                        hashes: [random_hash(), random_hash(), random_hash()],
+                        content: content,
+                        subs: [mindmap],
+                        users: [],
+                    };
                     
                     coll.insert(bubble, function(err, res) {
                         if(err) {
@@ -57,7 +62,7 @@ exports.connect = function(cb) {
                             cb(null);
                         } else {
                             console.log("bubble created");
-                            cb(get_bubble(bubble.hash));
+                            cb(get_bubble(bubble.hashes[2]));
                         }
                     });
                 }
@@ -68,8 +73,10 @@ exports.connect = function(cb) {
             var bubble = {hash: hash};
             
             var findOne = function(criteria, select, cb) {
-                criteria.hash = bubble.hash;
+                criteria.hashes = bubble.hash;
+                
                 console.log(criteria)
+                
                 client.collection('bubbles', function(err, coll) {
                     if(err) {
                         console.log(err);
@@ -99,7 +106,7 @@ exports.connect = function(cb) {
             }
             
             var update = function(criteria, data, cb) {
-                criteria.hash = bubble.hash;
+                criteria.hashes = bubble.hash;
                 
                 client.collection('bubbles', function(err, coll) {
                     coll.update(criteria, data, function(err, res) {

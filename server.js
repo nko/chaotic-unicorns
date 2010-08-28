@@ -51,7 +51,6 @@ db.connect(function(dbc) {
             }
         });
     });
-    
 
 
 
@@ -67,7 +66,7 @@ db.connect(function(dbc) {
         var session_manager = session.session_manager();
         
         ios.on('connection', function(client) {
-            var bubble, session, user;
+            var bubble, session, user, rights;
             
             var error = function(msg) {
                 client.send(JSON.stringify({err: {msg: msg}}));
@@ -100,19 +99,35 @@ db.connect(function(dbc) {
                                          
                         // sending the tree
                         bubble.get_tree(function(tree) {
+                            console.log("tree:");
                             console.log(tree);
-                            client.send(JSON.stringify({node_data: {bubble: tree}}));
+                            
+                            if(tree) {
+                                for(var n = 0; n < tree.hashes.length; n++) {
+                                    if(tree.hashes[n] == d.hash) {
+                                        console.log("rights: " + n);
+                                        rights = n;
+                                    }
+                                }
+                                
+                                tree.hashes = tree.hashes.slice(0, rights + 1);
+                                
+                                client.send(JSON.stringify({node_data: {bubble: tree}}));
+                                
+                                // session management
+                                session = session_manager.get(d.hash);
+                                session.broadcast({registered: {name: d.name, color: d.color}})
+                                session.add_client(client);
+                            } else {
+                                // TODO: close connection?
+                                error("Unknown Hash");
+                            }
                         });
-                        
-                        // session management
-                        session = session_manager.get(d.hash);
-                        session.broadcast({registered: {name: d.name, color: d.color}})
-                        session.add_client(client);
                     });
                 } else if(stanza.create_bubble) {
                     dbc.create_bubble(stanza.create_bubble.name, function(bubble) {
                         client.send(JSON.stringify({
-                            bubble_created: {hash: bubble.hash}
+                            bubble_created: {hash: bubble.hash},
                         }));
                     });
                 } else if(stanza.change_color) {
@@ -122,7 +137,7 @@ db.connect(function(dbc) {
                 } else if(stanza.change_name) {
                     name = stanza.change_name.name;
                     user.set_name(name);
-                    session.broadcast({color_changed: {name: name}});
+                    session.broadcast({name_changed: {name: name}});
                 } else if(stanza.add_node) {
                     if(session) {
                         d = stanza.add_node;
@@ -160,6 +175,21 @@ db.connect(function(dbc) {
                             session.broadcast(JSON.stringify({
                               node_deleted:{
                                 id: stanza.delete_node.id,
+                              }
+                            }) );
+                        });
+                    } else {
+                        error("No session");
+                    }
+                } else if(stanza.edit_content) {
+                    if(session) {
+                        d = stanza.edit_content;
+                        bubble.edit_node(d.id, d.content, function() {
+                            // tell your friends
+                            session.broadcast(JSON.stringify({
+                              content_edited:{
+                                id: d.id,
+                                content: d.content,
                               }
                             }) );
                         });
