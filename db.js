@@ -168,18 +168,33 @@ exports.connect = function(cb) {
                 update({}, {'$set': diff}, cb);
             }
             
-            bubble.add_node = function(position, content, cb) {
+            var add_node = bubble.add_node = function(position, content, cb) {
                 var adress = "subs." + position.join('.subs.') + ".subs";
                 var diff = {};
                 diff[adress] = create_node(content);
                 update({}, {'$push': diff}, cb);
             }
             
-            bubble.del_node = function(position, cb) {
+            var del_node = bubble.del_node = function(position, cb) {
                 var adress = "subs." + position.join('.subs.');
                 var diff = {};
                 diff[adress] = create_node(content);
                 update({}, {'$unset': diff}, cb);
+            }
+            
+            bubble.move_node = function(from, to, cb) {
+                // TODO: untetested and not even close to atomic
+                var adress = "subs." + position.join('.subs.');
+                var filter = {};
+                filter[adress] = 1;
+                
+                findOne({}, filter, function(res) {
+                    del_node(from, function() {
+                        add_node(to, res, function() {
+                            cb(res);
+                        });
+                    });
+                });
             }
             
             /*

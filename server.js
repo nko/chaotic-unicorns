@@ -130,8 +130,23 @@ db.connect(function(dbc) {
                             // tell your friends
                             session.broadcast(JSON.stringify({
                               node_added:{
-                                id: stanza.add_node.id,
-                                to: stanza.add_node.to,
+                                content: d.content,
+                                to: d.to,
+                              }
+                            }) );
+                        });
+                    } else {
+                        error("No session");
+                    }
+                } else if(stanza.move_node) {
+                    if(session) {
+                        d = stanza.move_node;
+                        bubble.add_moved(d.id, d.to, function() {
+                            // tell your friends
+                            session.broadcast(JSON.stringify({
+                              node_added:{
+                                id: d.id,
+                                to: d.to,
                               }
                             }) );
                         });
@@ -143,21 +158,11 @@ db.connect(function(dbc) {
                         bubble.del_node(stanza.delete_node, function() {
                             // tell your friends
                             session.broadcast(JSON.stringify({
-                              node_added:{
-                                id: stanza.add_node.id,
-                                to: stanza.add_node.to,
+                              node_deleted:{
+                                id: stanza.delete_node.id,
                               }
                             }) );
                         });
-                    } else {
-                        error("No session");
-                    }
-                } else if(stanza.delete_node) {
-                    if(session) {
-                        // TODO: fake!
-                        session.broadcast( JSON.stringify({
-                          node_deleted: {id: stanza.delete_node.id }
-                        }) );
                     } else {
                         error("No session");
                     }
