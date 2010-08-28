@@ -8,20 +8,25 @@
   .button tool2
   .button tool3
 
-= partial('node', [{text: "i am root", id: "root", rel:"none1,none2,none3"}])
-= partial('node', [{text: "node1", id:"none1", rel:"no1,no2"}])
-= partial('node', [{text: "noed2", id:"none2", rel:""}])
-= partial('node', [{text: "soöghsdfoöghöghsöghsoöghsöfvcnk<br>eogjitjtoih<br>iopjgiojütjioüj", id:"none3", rel:""}])
+= partial('node', [{text:"", id: "protonode", rel:'',}])
+#mm_1
+  #nodes
+    = partial('node', [{text: "i am root", id: "0_0", class:'root', rel:"none1,none2,none3"}])
+    = partial('node', [{text: "node1", id:"none1", rel:"no1,no2"}])
+    = partial('node', [{text: "n_0_0_2", id:"n_0_0_2", rel:"root"}])
+     partial('node', [{text: "soöghsdfoöghöghsöghsoöghsöfvcnk<br>eogjitjtoih<br>iopjgiojütjioüj", id:"none3", rel:"root"}])
 
 
-= partial('node', [{text: "sudfef", id:"no1", rel:""}])
-= partial('node', [{text: "ösdgjg", id:"no2", rel:""}])
+     partial('node', [{text: "sudfef", id:"no1", rel:"none1"}])
+     partial('node', [{text: "ösdgjg", id:"no2", rel:"none1"}])
 
-%form{id: 'change_name_form' ,style: 'position:fixed;bottom:0px;right:0px'}
+
+
+%form{id: 'change_name_form' ,style: 'position:fixed;bottom:0px;right:0px;z-index:9999'}
   %input{type: 'text', name: 'name'}
   %input{type: 'submit', value: 'change name'}
   
-%form{id: 'create_bubble_form' ,style: 'position:fixed;bottom:0px;left:0px'}
+%form{id: 'create_bubble_form' ,style: 'position:fixed;bottom:0px;left:0px;z-index:9999'}
   %input{type: 'text', name: 'name'}
   %input{type: 'submit', value: 'create bubble'}
 

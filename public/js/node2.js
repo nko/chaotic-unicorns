@@ -14,25 +14,40 @@ $(".holder").animate({width:'-=15px'}, 500);
   var json_plz = function(obj){
     return JSON.stringify(obj)
   }
+  
+  var id_for_html = function(arr){
+    return 'n_' + arr.join('_')
+  }
+  
+  var id_for_json = function(obj){
+    return $.each( obj.slice(2).split('_'), function(ele){ parseInt(ele) })
+  }
+  
   // triggers
   var get_node_id = function(ele){
     return $(ele).parents('.node')[0].id  
   }
   
   // visual
-  var fade_and_remove = function(id){
-    $('#' + id).fadeOut(90)
-    setTimeout("$('#" + id + "').remove()",100)
+  var fade_and_remove = function(id) {
+    var current  = $('#' + id);
+    current.fadeOut(90, function () {
+      current.remove();
+      updateCanvas();
+    })
   }
 
+initSprings();
 updateCanvas();
+setInterval("updateSprings(100)",100);
 
 // draggable
-$(".draggable").draggable({drag:updateCanvas});
+var draggable_options = {drag:updateCanvas}
+$(".draggable").draggable( draggable_options );
 
 $(".holder").hover(
-    function () {$(this).animate({width:'+=15px'}, 100);},//handleIn
-    function () { $(this).animate({width:'-=15px'}, 100);} //handleOut
+    function () {$(this).animate({width:'+=15px'}, 100).parent().animate({marginLeft:'-=15px'},100);},//handleIn
+    function () { $(this).animate({width:'-=15px'}, 100).parent().animate({marginLeft:'+=15px'},100);} //handleOut
 );
 
 
@@ -53,7 +68,7 @@ var register = function(name, color, hash){
     register: {
       'name': name,
       'color': color,
-      'id': hash,
+      'hash': hash,
     }
   }) )
 }
@@ -71,9 +86,17 @@ var change_color = function(color){
 }
 
   // changing tree structure
+var draw_all_nodes =  function(node){
+//  add_node
+}
+
+
 var add_node =  function(to){
   socket.send(json_plz({
-    add_node: {'to': to,}
+    add_node: {
+      'content': '',
+      'to': to,
+    }
   }) )
 }
 
@@ -124,7 +147,7 @@ $('#change_color').click(function(){
 })
 
 $('.add_node').click(function(){
-  var to_id = 0 // ...
+  var to_id = id_for_json( get_node_id(this) )
   add_node(to_id)
   return false
 })
@@ -163,6 +186,28 @@ $('#create_bubble_form').submit(function(){
   return false
 })
 
+$('.node p').live('dblclick', function(){
+  var parent = $(this).parent()
+  $(this).replaceWith('<input type="text" class="in-place-edit" value="' + $(this).text() + '" />').focus()
+  parent.find('input.in-place-edit').focus()
+  
+})
+
+var inplace_restore_p = function(ele){
+  $(ele).replaceWith('<p>' + $(ele).val() + '</p>')
+}
+$("input.in-place-edit").live('keypress', function (e) {
+  if( e.which == 13 ){
+    $(this).replaceWith('<p>' + $(this).val() + '</p>')
+  }
+  else if( e.which == 27 ){
+    inplace_restore_p(this)
+  }
+})
+$("input.in-place-edit").live('blur', function () {
+  inplace_restore_p(this)
+})
+
 
 // signals
 
@@ -180,13 +225,20 @@ socket.on('message', function(msg) {
         break;case 'error':
           console.log('ERROR: ' + val.msg)
         break;case 'registered':
-          // .. val.rootnode
+          //draw_all_nodes(val.root_node)
+        break;case 'node_data':
+          draw_all_nodes(val.root_node)
         break;case 'name_changed':
           // .. 
         break;case 'color_changed':
           // .. 
         break;case 'node_added':
-          // .. 
+          $('#protonode').clone().
+                          appendTo('#nodes').
+                          attr('id', id_for_html(val.to) + '_9').
+                          attr('rel', id_for_html(val.to)).
+                          draggable(draggable_options).
+                          fadeIn(100)
         break;case 'node_moved':
           // .. 
         break;case 'node_deleted':
@@ -211,7 +263,7 @@ socket.connect();
 
 var initial_name = 'chaot' // ...
 var initial_color = 'red' // ...
-register(initial_name, initial_color, location.pathname.slice(1)) // TODO hidden
+register(initial_name, initial_color, location.pathname.slice(1)) // TODO hidden field
 
 // close (document ready)
 });
