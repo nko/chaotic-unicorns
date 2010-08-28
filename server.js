@@ -6,6 +6,7 @@ require.paths.unshift(__dirname + '/lib');
 
 var express = require('express'),
     connect = require('connect'),
+    io = require('socket.io'),
     db = require('./db');
 
 db.connect(function(dbc) {
@@ -44,6 +45,12 @@ db.connect(function(dbc) {
 
     if (!module.parent) {
         app.listen(parseInt(process.env.PORT) || 3000);
-        console.log("server listening on port %d ...", app.address().port)
+        console.log("server listening on port %d ...", app.address().port);
+        
+        ios = io.listen(app);
+        
+        ios.on('connection', function(client) {
+            client.send('hello world');
+        });
     }
 });
