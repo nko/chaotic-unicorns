@@ -41,12 +41,12 @@ db.connect(function(dbc) {
         });
     });
 
-    app.get('/:id', function(req, res){
-        id = req.params.hash;
+    app.get('/:hash', function(req, res){
+        hash = req.params.hash;
         res.render('index.haml', {
             locals: {
                 title: 'Node²',
-                id: id,
+                hash: hash,
             }
         });
     });

@@ -48,7 +48,7 @@ exports.connect = function(cb) {
                             cb(null);
                         } else {
                             console.log("bubble created");
-                            cb(get_bubble(id));
+                            cb(get_bubble(bubble.id));
                         }
                     });
                 }
