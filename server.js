@@ -50,6 +50,11 @@ db.connect(function(dbc) {
             }
         });
     });
+    
+    // TODO: weitermachen
+    var bubble_session = function() {
+        
+    }
 
 
 
@@ -68,14 +73,14 @@ db.connect(function(dbc) {
               debug: {msg: 'hello world'}
             }) );
         
-            client.on('message', function(msg) {
+            var msg_cb = client.on('message', function(msg) {
                 console.log("incoming: " + msg);
                 stanza = JSON.parse(msg);
                 
                 if(stanza.create_bubble) {
                     dbc.create_bubble(stanza.create_bubble.name, function(bubble) {
                         client.send(JSON.stringify({
-                            bubble_created: {id: bubble.id}
+                            bubble_created: {hash: bubble.hash}
                         }));
                     });
                 } else if(stanza.delete_node) {
@@ -83,7 +88,7 @@ db.connect(function(dbc) {
                     client.send(JSON.stringify({
                       node_deleted: {id: stanza.delete_node.id }
                     }) );
-                }else {
+                } else {
                     client.send(JSON.stringify({err: {msg: "Unknown method"}}));
                 }
             });
