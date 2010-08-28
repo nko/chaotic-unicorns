@@ -77,25 +77,28 @@ body {
     }
   
     .tooltip {
-      .rounded_corners(4px);
-      padding:1px 5px 1px 5px;
-      display:none;
       position:absolute;
-      z-index:1001;
-      background:black;
-      float:left;
-      right:133px;
-      margin-top:-16px;
-      .arrow {
-        border-color:transparent transparent transparent black;
-        border-style:solid;
-        border-width:4px;
+      width:600px;
+      left:-600px;
+      display:none;
+      margin-top:-2px;
+      .bubble {
+        .rounded_corners(4px);
+        padding:1px 5px 1px 5px;
         position:absolute;
-        float:left;
-        height:0px;
-        width:0px;
-        right:-7px;
-        margin-top:3px;
+        z-index:1001;
+        background:black;
+        right:0px;
+        .arrow {
+          border-color:transparent transparent transparent black;
+          border-style:solid;
+          border-width:4px;
+          position:absolute;
+          height:0px;
+          width:0px;
+          right:-7px;
+          margin-top:3px;
+        }
       }
     }
   }
