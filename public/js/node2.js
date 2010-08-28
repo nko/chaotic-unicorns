@@ -6,7 +6,6 @@ if(typeof(console) == 'undefined') console = {log: function () {}};
 // draggable
 $(".draggable").draggable();
 
-<<<<<<< HEAD
 // socket test code ...
 var socket = new io.Socket(location.hostname, {
     transports: ['websocket', 'xhr-polling', 'xhr-multipart', 'server-events', 'htmlfile', 'flashsocket']
