@@ -33,7 +33,7 @@ app.configure('production', function(){
 app.get('/', function(req, res){
     res.render('index.haml', {
         locals: {
-            title: 'Node2'
+            title: 'Node²'
         }
     });
 });
