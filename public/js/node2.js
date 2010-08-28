@@ -39,7 +39,7 @@ $(".holder").animate({width:'-=15px'}, 500);
 
 initSprings();
 updateCanvas();
-setInterval("updateSprings(1/20)",20);
+setInterval("updateSprings(1/100)",100);
 
 // draggable
 var draggable_options = {drag:updateCanvas}
@@ -47,9 +47,13 @@ $(".draggable").draggable( draggable_options );
 
 $(".holder").hover(
     function () {$(this).animate({width:'+=15px'}, 100).parent().animate({marginLeft:'-=15px'},100);},//handleIn
-    function () { $(this).animate({width:'-=15px'}, 100).parent().animate({marginLeft:'+=15px'},100);} //handleOut
+    function () {$(this).animate({width:'-=15px'}, 100).parent().animate({marginLeft:'+=15px'},100);} //handleOut
 );
 
+$(".node").hover(
+    function () {$(this).addClass("fixed");},
+    function () {$(this).removeClass("fixed");}
+);
 
 // init part 1
   // create socket

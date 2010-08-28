@@ -10,8 +10,8 @@ var vsub = function (a,b) {return {x:a.x-b.x, y:a.y-b.y};};
 
 // spring vars
 
-var spring_length = 100;
-var spring_strength = 30;
+var spring_length = 140;
+var spring_strength = 100;
 var spring_mass = 50;
 
 // canvas
@@ -119,7 +119,7 @@ var updateSprings = function (_dt) {
     g.beginPath();
     $.each(accelerations, function (_, node) {
         var current = node.current;
-        if(!current.hasClass("root")) {
+        if(!current.hasClass("root") && !current.hasClass("fixed")) {
             // some speed calc
             var speed = current.attr('speed').split(",");
             speed = {x: parseFloat(speed[0]), y: parseFloat(speed[1])};
