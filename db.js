@@ -1,5 +1,24 @@
 var mongo = require('./lib/mongodb');
 
+var random_hash = function() {
+    hash = "";
+    for(var n = 0; n < 16; n++) {
+        var rand = Math.floor(Math.random()*62);
+        
+        // move it to nice ascii values
+        rand += 48;
+        if(rand > 57) {
+            rand += 7;
+        }
+        if(rand > 90) {
+            rand += 6;
+        }
+        
+        hash += String.fromCharCode(rand);  
+    }
+    return hash;
+}
+
 exports.connect = function(cb) {
     var host = process.env['MONGO_NODE_DRIVER_HOST'] != null ?
         process.env['MONGO_NODE_DRIVER_HOST'] : 'localhost';
@@ -11,16 +30,28 @@ exports.connect = function(cb) {
     client.open(function(err, client) {
         var con = {client: client};
         
-        con.create_bubble = function(content, id, cb) {
-            bubble = {content: name, subs: [], users: []};
+        con.create_bubble = function(content, cb) {
+            var bubble;
+            
+            console.log("creating bubble")
+            
             client.collection('bubbles', function(err, coll) {
-                coll.insert(bubble, function(err, res) {
-                    if(err) {
-                        cb(null);
-                    } else {
-                        cb(get_bubble(id));
-                    }
-                });
+                if(err) {
+                    console.log(err);
+                    cb(null);
+                } else {
+                    console.log("collection found");
+                    bubble = {id: random_hash(), content: content, subs: [], users: []};
+                    coll.insert(bubble, function(err, res) {
+                        if(err) {
+                            console.log(err);
+                            cb(null);
+                        } else {
+                            console.log("bubble created");
+                            cb(get_bubble(id));
+                        }
+                    });
+                }
             });
         }
         
@@ -31,7 +62,12 @@ exports.connect = function(cb) {
                 criteria.id = id;
                 client.collection('bubbles', function(err, coll) {
                     coll.findOne(criteria, select, function(err, res) {
-                        cb(res)
+                        if(err) {
+                            console.log(err);
+                            cb(null);
+                        } else {
+                            cb(res);
+                        }
                     });
                 });
             }
@@ -39,7 +75,12 @@ exports.connect = function(cb) {
             var update = function(criteria, data, cb) {
                 client.collection('bubbles', function(err, coll) {
                     coll.update(criteria, data, function(err, res) {
-                        cb(res);
+                        if(err) {
+                            console.log(err);
+                            cb(null);
+                        } else {
+                            cb(res);
+                        }
                     });
                 });
             }

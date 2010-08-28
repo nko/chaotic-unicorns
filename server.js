@@ -41,6 +41,18 @@ db.connect(function(dbc) {
         });
     });
 
+    app.get('/:id', function(req, res){
+        id = req.params.hash;
+        res.render('index.haml', {
+            locals: {
+                title: 'Node²',
+                id: id,
+            }
+        });
+    });
+
+
+
     // Only listen on $ node app.js
 
     if (!module.parent) {
@@ -50,9 +62,26 @@ db.connect(function(dbc) {
         ios = io.listen(app);
         
         ios.on('connection', function(client) {
+            var bubble;
+            
             client.send(JSON.stringify({
               debug: {msg: 'hello world'}
             }) );
+        
+            client.on('message', function(msg) {
+                console.log("incoming: " + msg);
+                stanza = JSON.parse(msg);
+                
+                if(stanza.create_bubble) {
+                    dbc.create_bubble(stanza.name, function(bubble) {
+                        client.send(JSON.stringify({
+                            bubble_created: {id: bubble.id}
+                        }));
+                    });
+                } else {
+                    client.send(JSON.stringify(true));
+                }
+            });
         });
     }
 });
