@@ -43,7 +43,6 @@ tree-path ([1,0,4])
     register(bubble_id, name, color)
     change_name(name)
     change_color(color)
-    user_list()
 
     # changing tree structure
     add_node(content, to)
@@ -77,7 +76,6 @@ tree-path ([1,0,4])
     left(name)
     name_changed(old, new)
     color_changed(name, color)
-    user_list([{name: '', color: ''}, ...])
 
     # changing tree structure
     node_added(content, to)

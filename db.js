@@ -38,6 +38,7 @@ exports.connect = function(cb) {
             client.collection('bubbles', function(err, coll) {
                 if(err) {
                     console.log(err);
+                    console.log(err.stack)
                     cb(null);
                 } else {
                     console.log("collection found");
@@ -61,14 +62,27 @@ exports.connect = function(cb) {
             var findOne = function(criteria, select, cb) {
                 criteria.hash = bubble.hash;
                 client.collection('bubbles', function(err, coll) {
-                    coll.findOne(criteria, select, function(err, res) {
-                        if(err) {
-                            console.log(err);
-                            cb(null);
-                        } else {
-                            cb(res);
+                    if(err) {
+                        console.log(err);
+                        console.log(err.stack)
+                        cb(null);
+                    } else {
+                        var find_cb = function(err, res) {
+                            if(err) {
+                                console.log(err);
+                                console.log(err.stack)
+                                cb(null);
+                            } else {
+                                cb(res);
+                            }
                         }
-                    });
+                        
+                        if(select === undefined) {
+                            coll.findOne(criteria, find_cb);
+                        } else {
+                            coll.findOne(criteria, select, find_cb);
+                        }
+                    }
                 });
             }
             
@@ -79,6 +93,7 @@ exports.connect = function(cb) {
                     coll.update(criteria, data, function(err, res) {
                         if(err) {
                             console.log(err);
+                            console.log(err.stack)
                             cb(null);
                         } else {
                             cb(res);
@@ -87,14 +102,19 @@ exports.connect = function(cb) {
                 });
             }
             
-            var create_user = function(data) {
-                var user = {data: data};
+            bubble.get_tree = function(cb) {
+                findOne({}, undefined, cb);
+            }
+            
+            // TODO: db-interaction at creation
+            bubble.create_user = function(name, color) {
+                var user = {name: name, color: color};
                 
                 user.rename = function(name, cb) {
-                    update({'users.name': data.name},
+                    update({'users.name': user.name},
                         {'$set': {"users.$.name": name}},
                         function() {
-                            data.name = name;
+                            user.name = name;
                             if(cb !== undefined) {
                                 cb();
                             }
@@ -103,10 +123,10 @@ exports.connect = function(cb) {
                 }
                 
                 user.set_color = function(color, cb) {
-                    update({'users.name': data.name},
+                    update({'users.name': user.name},
                         {'$set': {"users.$.color": color}},
                         function() {
-                            data.color = color;
+                            user.color = color;
                             if(cb !== undefined) {
                                 cb();
                             }
@@ -114,9 +134,19 @@ exports.connect = function(cb) {
                     );
                 }
                 
+                user.add_node = function(position, content, cb) {
+                    var node = {content: content, sub: []};
+                    var adress = "subs." + position.join('.subs.');
+                    
+                    console.log(adress); 
+                    
+                    update({}, {'$push': {adress: node}}, cb);
+                }
+                
                 return user;
             }
             
+            /*
             bubble.get_user = function(name, cb) {
                 findOne({'users.name': name}, {'users.$': 1}, function(err, res) {
                     if(err) {
@@ -132,6 +162,7 @@ exports.connect = function(cb) {
                 // TODO
                 cb(null);
             }
+            */
             
             return bubble;
         }

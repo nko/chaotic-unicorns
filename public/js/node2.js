@@ -46,7 +46,7 @@ var draggable_options = {drag:updateCanvas}
 $(".draggable").draggable( draggable_options );
 
 $(".holder").hover(
-    function () {$(this).animate({width:'+=15px'}, 100).parent().animate({marginLeft:'-=15px'},100);},//handleIn
+    function () {$(this).addClass("root").animate({width:'+=15px'}, 100).parent().animate({marginLeft:'-=15px'},100,function () {$(this).removeClass("root")});},//handleIn
     function () { $(this).animate({width:'-=15px'}, 100).parent().animate({marginLeft:'+=15px'},100);} //handleOut
 );
 
