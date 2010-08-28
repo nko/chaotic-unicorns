@@ -48,10 +48,11 @@ body {
   .holder {
     float:left;
     text-align:center;
-    width:@node_size;//width:@node_size / 3;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     .rounded_corner_top_left(@node_size * 0.1);
     .rounded_corner_bottom_left(@node_size * 0.1);
     background:@node_border_color;
+    overflow:hidden;
+    padding-left:2px;
     
     .button {
       display:block;
