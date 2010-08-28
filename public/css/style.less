@@ -40,7 +40,6 @@ body {
   .rounded_corner_bottom_right(33px);
 }
 
-
 .node {
   position:absolute;
   clear:both;
@@ -84,11 +83,11 @@ body {
       display:none;
       margin-top:-2px;
       font-weight:normal;
+      z-index:1001;
       .bubble {
         .rounded_corners(4px);
         padding:1px 5px 1px 5px;
         position:absolute;
-        z-index:1001;
         background:black;
         right:0px;
         .arrow {
@@ -115,7 +114,7 @@ body {
     
     .shadow(0px, 0px, 10px, rgba(210, 210, 210, 0.83021));
     
-    background:rgb(235, 235, 235);
+    background:@node_background_color;
     .rounded_corner_top_right(@node_size * 0.1);
     .rounded_corner_bottom_right(@node_size * 0.1);
     
