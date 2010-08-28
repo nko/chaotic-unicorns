@@ -1,60 +1,129 @@
 @import "public/css/include/rounded_corners";
 @import "public/css/include/shadows";
 
-@node_size:66px;
-
+@node_size:23px;
+@node_border_size:2px;
+@node_border_color:rgb(220,220,220);
+@holder_button_size:@node_size * 0.5;
 
 
 body {
   padding: 0px;
   margin: 0px;
   font: 10px "Lucida Grande", "Helvetica Nueue", Arial, sans-serif;
+  background:rgb(233,233,233);
 }
 
 #title_bar {
   position:absolute;
-  border:1px solid red;
+  padding:10px;
   width:80%;
   height:50px;
   left:10%;
-  background:rgba(0,0,0,0.9);
-  color:white;
+  background:rgba(0,0,0,0.1);
+  color:black;
   z-index:1000;
+  .rounded_corner_bottom_left(33px);
+  .rounded_corner_bottom_right(33px);
 }
 
 #tool_bar {
+  padding:10px;
   position:absolute;
-  border:1px solid blue;
   height:80%;
   width:77px;
   top:10%;
-  background:rgba(0,0,0,0.9);
-  color:white;
+  background:rgba(0,0,0,0.1);
+  color:black;
   z-index:1000;
+  .rounded_corner_top_right(33px);
+  .rounded_corner_bottom_right(33px);
 }
 
 
 .node {
-  border:1px solid rgba(11,11,11,0.4);
   position:absolute;
-  min-width:@node_size;
-  min-height:@node_size;
-  background:rgba(88,88,88,0.4);
-  .rounded_corners(@node_size / 3);
-  padding:@node_size / 6;
+  clear:both;
   
+  .holder {
+    float:left;
+    text-align:center;
+    width:@node_size;//width:@node_size / 3;//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    .rounded_corner_top_left(@node_size * 0.1);
+    .rounded_corner_bottom_left(@node_size * 0.1);
+    background:@node_border_color;
+    
+    .button {
+      display:block;
+      .rounded_corners(@holder_button_size);
+      height:@holder_button_size;
+      width:@holder_button_size;
+      text-align:center;
+      padding:0.2em;
+      margin:0.3em;
+      font-style:bold;
+      color:black;
+      background:rgb(233,233,233);
+      //font-size:8px;
+      text-decoration:none;
+      
+      :hover {
+        background:red;
+      }
+    }
+    
+    :hover {
+      background:rgb(111,111,111);
+      color:white;
+    }
+  }
+  .body {
+    float:left;
+    min-height:@node_size - @node_border_size * 2;
+    min-width:@node_size * 4;
+    
+    margin-top:@node_border_size;
+    margin-right:@node_border_size;
+    margin-bottom:@node_border_size;
+    
+    .shadow(0px, 0px, 10px, rgba(210, 210, 210, 0.83021));
+    
+    background:rgb(235, 235, 235);
+    .rounded_corner_top_right(@node_size * 0.1);
+    .rounded_corner_bottom_right(@node_size * 0.1);
+    
+    padding-top:@node_size / 5;
+    padding-left:@node_size / 5 * 2;
+    padding-right:@node_size / 5;
+    padding-bottom:@node_size / 5;
+  }
 }
 
-// dummy
+// dummy bzw. später evtl. nur node als draggable
 .draggable {
-  border:1px solid gold;
-  cursor:move;
+  .holder {
+    //cursor:move;
+  }
 }
-
-
 
 #root {
-  border:1px solid magenta;
+  //border:@node_border_size solid rgba(11,11,11,0.2);
+  font-style:bold;
   top:50%;
   left:50%;
+  z-index:101;
+}
+
+
+// jquery stuff
+.ui-draggable-dragging {
+  .holder {
+    .shadow(0px, 0px, 10px, rgba(210, 210, 210, 0.83021));
+  }
+  .body {
+     margin:0px;
+     border-top:@node_border_size solid @node_border_color;
+     border-right:@node_border_size solid @node_border_color;
+     border-bottom:@node_border_size solid @node_border_color;
+  }
 }

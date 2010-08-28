@@ -3,15 +3,12 @@
   some bla bal
 
 #tool_bar
-  .button tool1
+  .button
+     tool1
   .button tool2
   .button tool3
 
-#root.node.draggable
-  i am root!
-
-.node.draggable
-  node1
-  
-.node.draggable
-  node2
+= partial('node', [{text: "i am root", id: "root"}])
+= partial('node', [{text: "node1", id:"none"}])
+= partial('node', [{text: "noed2", id:"none"}])
+= partial('node', [{text: "soöghsdfoöghöghsöghsoöghsöfvcnk<br>eogjitjtoih<br>iopjgiojütjioüj", id:"none"}])
