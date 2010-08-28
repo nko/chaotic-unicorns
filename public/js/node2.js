@@ -19,7 +19,5 @@ socket.on('message', function(msg) {
 });
 socket.connect();
 
-=======
->>>>>>> df6b8ad73620b9d2fb46285dd402b61514079ffe
 // close
 });
