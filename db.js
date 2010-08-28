@@ -19,6 +19,10 @@ var random_hash = function() {
     return hash;
 }
 
+var create_node = function(content) {
+    return {content: content, subs: []};
+}
+
 exports.connect = function(cb) {
     var host = process.env['MONGO_NODE_DRIVER_HOST'] != null ?
         process.env['MONGO_NODE_DRIVER_HOST'] : 'localhost';
@@ -31,7 +35,7 @@ exports.connect = function(cb) {
         var con = {client: client};
         
         con.create_bubble = function(content, cb) {
-            var bubble;
+            var bubble, mindmap, node;
             
             console.log("creating bubble")
             
@@ -42,7 +46,11 @@ exports.connect = function(cb) {
                     cb(null);
                 } else {
                     console.log("collection found");
-                    bubble = {hash: random_hash(), content: content, subs: [], users: []};
+                    
+                    node = create_node(content);
+                    mindmap = {content: content, subs: [node]};
+                    bubble = {hash: random_hash(), content: content, subs: [mindmap], users: []};
+                    
                     coll.insert(bubble, function(err, res) {
                         if(err) {
                             console.log(err);
@@ -61,6 +69,7 @@ exports.connect = function(cb) {
             
             var findOne = function(criteria, select, cb) {
                 criteria.hash = bubble.hash;
+                console.log(criteria)
                 client.collection('bubbles', function(err, coll) {
                     if(err) {
                         console.log(err);
@@ -73,13 +82,16 @@ exports.connect = function(cb) {
                                 console.log(err.stack)
                                 cb(null);
                             } else {
+                                console.log("found: "+res)
                                 cb(res);
                             }
                         }
                         
                         if(select === undefined) {
+                            console.log('single');
                             coll.findOne(criteria, find_cb);
                         } else {
+                            console.log('multi');
                             coll.findOne(criteria, select, find_cb);
                         }
                     }
@@ -134,16 +146,19 @@ exports.connect = function(cb) {
                     );
                 }
                 
-                user.add_node = function(position, content, cb) {
-                    var node = {content: content, sub: []};
-                    var adress = "subs." + position.join('.subs.');
-                    
-                    console.log(adress); 
-                    
-                    update({}, {'$push': {adress: node}}, cb);
-                }
-                
                 return user;
+            }
+                
+            bubble.add_node = function(position, content, cb) {
+                var node = create_node(content);
+                var adress = "subs." + position.join('.subs.') + ".subs";
+                
+                console.log(node)
+                console.log(adress)
+                
+                diff = {};
+                diff[adress] = node;
+                update({}, {'$push': diff}, cb);
             }
             
             /*
