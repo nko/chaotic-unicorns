@@ -1,7 +1,22 @@
 %div.node.draggable{id: node.id}
   .holder
-    %a.button{href: "#"} ⚑
-    %a.button{href: "#"} ⚙
-    %a.button{href: "#"} ✖
+    %a.button{href: "#"}
+      .tooltip
+        .bubble
+          .arrow
+          flag
+      ⚑
+    %a.button{href: "#"}
+      .tooltip
+        .bubble
+          .arrow
+          edit
+      ⚙
+    %a.button{href: "#"}
+      .tooltip
+        .bubble
+          .arrow
+          delete
+      ✖
   .body
     %p= node.text
