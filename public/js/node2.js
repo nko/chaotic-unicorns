@@ -24,15 +24,10 @@ $(".holder").animate({width:'-=15px'}, 500);
     setTimeout("$('#" + id + "').remove()",100)
   }
 
-//canvas
-/*
-var updateCanvas = function (name) {
-    var elmnt
-};
-*/
+updateCanvas();
 
 // draggable
-$(".draggable").draggable();
+$(".draggable").draggable({drag:updateCanvas});
 
 $(".holder").hover(
     function () {$(this).animate({width:'+=15px'}, 100);},//handleIn
