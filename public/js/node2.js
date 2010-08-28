@@ -1,6 +1,25 @@
 $(document).ready(function(){
 
-$(".holder").animate({width:'-=15px'}, 500);
+var initNode = function (_node) {
+    var node = $(_node);
+    var holder = node.find(".holder");
+    var canvas = $("#canvas");
+    node.css({left:canvas.offset().left + canvas.width() / 2, top:canvas.offset().top + canvas.height() / 2});
+    initSpring(node);
+    node.hover(
+        function () {$(this).addClass("fixed");},
+        function () {$(this).removeClass("fixed");}
+    );
+    var h = holder.height();//var h = holder.parent().find(".body").height();
+    holder.animate({width:'-=15px', height:h+"px"}, 500);
+    holder.hover(
+        function () {$(this).animate({width:'+=15px'}, 100).parent().animate({marginLeft:'-=15px'},100);},//handleIn
+        function () {$(this).animate({width:'-=15px'}, 100).parent().animate({marginLeft:'+=15px'},100);} //handleOut
+    );
+};
+$(".node").each(function (_, _node) {initNode(_node);});
+updateCanvas();
+setInterval("updateSprings(1/100)",100);
 
 // helpers
   // firefox workaround
@@ -20,7 +39,11 @@ $(".holder").animate({width:'-=15px'}, 500);
   }
   
   var id_for_json = function(obj){
-    return $.each( obj.slice(2).split('_'), function(ele){ parseInt(ele) })
+    a = []
+    $.each(obj.slice(2).split('_'), function(cur,ele){
+    a[cur]=parseInt(ele)
+    })
+    return a
   }
   
   // triggers
@@ -37,19 +60,9 @@ $(".holder").animate({width:'-=15px'}, 500);
     })
   }
 
-initSprings();
-updateCanvas();
-setInterval("updateSprings(1/100)",100);
-
 // draggable
 var draggable_options = {drag:updateCanvas}
 $(".draggable").draggable( draggable_options );
-
-$(".holder").hover(
-    function () {$(this).addClass("root").animate({width:'+=15px'}, 100).parent().animate({marginLeft:'-=15px'},100,function () {$(this).removeClass("root")});},//handleIn
-    function () { $(this).animate({width:'-=15px'}, 100).parent().animate({marginLeft:'+=15px'},100);} //handleOut
-);
-
 
 // init part 1
   // create socket
@@ -88,24 +101,25 @@ var change_color = function(color){
   // changing tree structure
   draw_node = function(node, par_id){
   console.log(node, par_id)
-    var html_id = id_for_html(par_id) + '_' + $('.'+ id_for_html(par_id)).length
-    $('#protonode').clone().
+    var html_id = id_for_html(par_id) + '_' + ($('.'+ id_for_html(par_id)).length )
+    obj = $('#protonode').clone().
                   attr('id', html_id ).
-                  addClass('class', id_for_html(par_id)).
-                  attr('rel', id_for_html(par_id)).
+                  addClass(id_for_html(par_id)).
+                  attr('relation', id_for_html(par_id)).
                   draggable(draggable_options).
-                  appendTo('#nodes').
-                  fadeIn(100)
-    if(node.subs){
-      $.each(function(cur){
+                  appendTo('#nodes').fadeIn(100);
+    initNode(obj)
+    obj.find('p').text( node.content || ' ' );
+    if(node.subs) {
+      $.each(node.subs, function(_,cur){
         draw_node(cur, id_for_json(html_id) )
-      })
+      });
     }
   }
 
 var draw_all_nodes =  function(node){
-  console.log( node )
-  draw_node(node.subs[0], [0])
+  draw_node(node.subs[0].subs[0], [0]);
+  $('#n_0_0').addClass("root");
 }
 
 
@@ -134,7 +148,7 @@ var delete_node = function(id){
   // changing properties
 var edit_content = function(id, content){
   socket.send(json_plz({
-    edit_content: {'id': id, 'content': content,}
+    edit_content: {'id': id_for_json(id), 'content': content,}
   }) )
 }
 
@@ -160,34 +174,35 @@ $('#change_name_form').submit(function(){
   return false
 })
 
-$('#change_color').click(function(){
+$('#change_color').live('click',function(){
   var color = 'blue' // ...
   change_color(color)
 })
 
-$('.add_node').click(function(){
-  var to_id = id_for_json( get_node_id(this) )
-  add_node('', to_id)
+$('.add_node').live('click', function(){
+  var to_id   = id_for_json( get_node_id(this) )
+  var content = $(this).parent().find('p').text()
+  add_node(content, to_id)
   return false
 })
 
 /*
-$('.node').function(){ //TODO jquery hook
+$('.node').funclivetion(){ //TODO jquery hook
   var node_id = get_node_id(this)
   var to_id   = // ...
   move_node(node_id, content)
 })
 */
 
-$('.delete_node').click(function(){
+$('.delete_node').live('click', function(){
   var node_id = get_node_id(this)
   delete_node(node_id)
   return false
 })
 
-$('.edit_content').click(function(){
+$('.edit_content').live('click', function(){
   var node_id = get_node_id(this)
-  var content = //...
+  var content = '5'//...
   edit_content(node_id, content)
 })
 
@@ -212,7 +227,8 @@ $('.node p').live('dblclick', function(){
   
 })
 
-var inplace_restore_p = function(ele){
+var inplace_submit_and_restore_p = function(ele){
+  edit_content( get_node_id(ele), $(ele).val() )
   $(ele).replaceWith('<p>' + $(ele).val() + '</p>')
 }
 $("input.in-place-edit").live('keypress', function (e) {
@@ -224,7 +240,7 @@ $("input.in-place-edit").live('keypress', function (e) {
   }
 })
 $("input.in-place-edit").live('blur', function () {
-  inplace_restore_p(this)
+  inplace_submit_and_restore_p(this)
 })
 
 
@@ -246,13 +262,13 @@ socket.on('message', function(msg) {
         break;case 'registered':
           //draw_all_nodes(val.root_node)
         break;case 'node_data':
-          //draw_all_nodes(val.bubble)
+          draw_all_nodes(val.bubble)
         break;case 'name_changed':
           // .. 
         break;case 'color_changed':
           // .. 
         break;case 'node_added':
-          draw_node({content: '', }, val.to)
+          draw_node({content: val.content, }, val.to)
         break;case 'node_moved':
           // .. 
         break;case 'node_deleted':
@@ -260,6 +276,7 @@ socket.on('message', function(msg) {
         break;case 'position_changed':
           // .. 
         break;case 'content_edited':
+          
           // .. 
         break;case 'bubble_created':
           location.href = '/' + val.hash
@@ -278,6 +295,8 @@ socket.connect();
 var initial_name = 'chaot' // ...
 var initial_color = 'red' // ...
 register(initial_name, initial_color, location.pathname.slice(1)) // TODO hidden field
+
+//$('#colorpicker').ColorPicker()
 
 // close (document ready)
 });
