@@ -7,6 +7,7 @@ require.paths.unshift(__dirname + '/lib');
 var express = require('express'),
     connect = require('connect'),
     io = require('socket.io'),
+    session = require('./session'),
     db = require('./db');
 
 db.connect(function(dbc) {
@@ -51,10 +52,7 @@ db.connect(function(dbc) {
         });
     });
     
-    // TODO: weitermachen
-    var bubble_session = function() {
-        
-    }
+
 
 
 
@@ -66,30 +64,89 @@ db.connect(function(dbc) {
         
         ios = io.listen(app);
         
+        var session_manager = session.session_manager();
+        
         ios.on('connection', function(client) {
-            var bubble;
+            var bubble, session, user;
+            
+            var error = function(msg) {
+                client.send(JSON.stringify({err: {msg: msg}}));
+            }
             
             client.send(JSON.stringify({
-              debug: {msg: 'hello world'}
+                debug: {msg: 'hello world'}
             }) );
+            
+            client.on('disconnect', function() {
+                console.log('bye client')
+                if(session) {
+                    session.remove_client(client);
+                    session.broadcast({left: {name: user.name}});
+                }
+            });
         
-            var msg_cb = client.on('message', function(msg) {
+            client.on('message', function(msg) {
                 console.log("incoming: " + msg);
                 stanza = JSON.parse(msg);
                 
-                if(stanza.create_bubble) {
+                if(stanza.register) {
+                    // TODO: move bubble into session?
+                    d = stanza.register
+                    
+                    // db-abstraction
+                    bubble = dbc.get_bubble(d.hash);
+                    user = bubble.create_user(d.name, d.color);
+                    
+                    // sending the tree
+                    bubble.get_tree(function(tree) {
+                        console.log(tree);
+                        client.send(tree);
+                    });
+                    
+                    // session management
+                    session = session_manager.get(d.hash);
+                    session.broadcast({registered: {name: d.name, color: d.color}})
+                    session.add_client(client);
+                } else if(stanza.create_bubble) {
                     dbc.create_bubble(stanza.create_bubble.name, function(bubble) {
                         client.send(JSON.stringify({
                             bubble_created: {hash: bubble.hash}
                         }));
                     });
+                } else if(stanza.change_color) {
+                    color = stanza.change_color.color;
+                    user.set_color(color);
+                    session.broadcast({color_changed: {color: color}});
+                } else if(stanza.change_name) {
+                    name = stanza.change_name.name;
+                    user.set_name(name);
+                    session.broadcast({color_changed: {name: name}});
+                } else if(stanza.add_node) {
+                    if(session) {
+                        d = stanza.add_node;
+                        bubble.add_tree(d.to, d.content, function() {
+                            // tell your friends
+                            session.broadcast(JSON.stringify({
+                              node_added:{
+                                id: stanza.add_node.id,
+                                to: stanza.add_node.to,
+                              }
+                            }) );
+                        });
+                    } else {
+                        error("No session");
+                    }
                 } else if(stanza.delete_node) {
-                    // TODO: fake!
-                    client.send(JSON.stringify({
-                      node_deleted: {id: stanza.delete_node.id }
-                    }) );
+                    if(session) {
+                        // TODO: fake!
+                        session.broadcast(JSON.stringify({
+                          node_deleted: {id: stanza.delete_node.id }
+                        }) );
+                    } else {
+                        error("No session");
+                    }
                 } else {
-                    client.send(JSON.stringify({err: {msg: "Unknown method"}}));
+                    error("Unknown method");
                 }
             });
         });
