@@ -41,6 +41,6 @@ app.get('/', function(req, res){
 // Only listen on $ node app.js
 
 if (!module.parent) {
-    app.listen(process.env.PORT || 3000);
+    app.listen(parseInt(process.env.PORT) || 3000);
     console.log("server listening on port %d ...", app.address().port)
 }
