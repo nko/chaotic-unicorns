@@ -50,7 +50,7 @@ db.connect(function(dbc) {
         ios = io.listen(app);
         
         ios.on('connection', function(client) {
-            client.send('hello');
+            client.send('hello world');
         });
     }
 });
