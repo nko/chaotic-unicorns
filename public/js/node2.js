@@ -13,6 +13,23 @@ $(".holder").animate({width:'-=15px'}, 500);
   var json_plz = function(obj){
     return JSON.stringify(obj)
   }
+  // triggers
+  var get_node_id = function(ele){
+    return $(ele).parents('.node')[0].id  
+  }
+  
+  // visual
+  var fade_and_remove = function(id){
+    $('#' + id).fadeOut(90)
+    setTimeout("$('#" + id + "').remove()",100)
+  }
+
+//canvas
+/*
+var updateCanvas = function (name) {
+    var elmnt
+};
+*/
 
 // draggable
 $(".draggable").draggable();
@@ -104,9 +121,10 @@ $('#change_color').click(function(){
   change_color(color)
 })
 
-$('#add_node').click(function(){
+$('.add_node').click(function(){
   var to_id = 0 // ...
   add_node(to_id)
+  return false
 })
 
 /*
@@ -117,13 +135,13 @@ $('.node').function(){ //TODO jquery hook
 })
 */
 
-$('#delete_node').click(function(){
+$('.delete_node').click(function(){
   var node_id = get_node_id(this)
   delete_node(node_id)
+  return false
 })
 
-
-$('#edit_content').click(function(){
+$('.edit_content').click(function(){
   var node_id = get_node_id(this)
   var content = //...
   edit_content(node_id, content)
@@ -170,7 +188,7 @@ socket.on('message', function(msg) {
         break;case 'node_moved':
           // .. 
         break;case 'node_deleted':
-          // .. 
+          fade_and_remove( val.id )
         break;case 'position_changed':
           // .. 
         break;case 'content_edited':
