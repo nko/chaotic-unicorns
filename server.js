@@ -95,18 +95,20 @@ db.connect(function(dbc) {
                     
                     // db-abstraction
                     bubble = dbc.get_bubble(d.hash);
-                    user = bubble.create_user(d.name, d.color);
-                    
-                    // sending the tree
-                    bubble.get_tree(function(tree) {
-                        console.log(tree);
-                        client.send(JSON.stringify({node_data: {bubble: tree}}));
+                    bubble.create_user(d.name, d.color, function(res) {   
+                        user = res;
+                                         
+                        // sending the tree
+                        bubble.get_tree(function(tree) {
+                            console.log(tree);
+                            client.send(JSON.stringify({node_data: {bubble: tree}}));
+                        });
+                        
+                        // session management
+                        session = session_manager.get(d.hash);
+                        session.broadcast({registered: {name: d.name, color: d.color}})
+                        session.add_client(client);
                     });
-                    
-                    // session management
-                    session = session_manager.get(d.hash);
-                    session.broadcast({registered: {name: d.name, color: d.color}})
-                    session.add_client(client);
                 } else if(stanza.create_bubble) {
                     dbc.create_bubble(stanza.create_bubble.name, function(bubble) {
                         client.send(JSON.stringify({
@@ -125,6 +127,20 @@ db.connect(function(dbc) {
                     if(session) {
                         d = stanza.add_node;
                         bubble.add_node(d.to, d.content, function() {
+                            // tell your friends
+                            session.broadcast(JSON.stringify({
+                              node_added:{
+                                id: stanza.add_node.id,
+                                to: stanza.add_node.to,
+                              }
+                            }) );
+                        });
+                    } else {
+                        error("No session");
+                    }
+                } else if(stanza.delete_node) {
+                    if(session) {
+                        bubble.del_node(stanza.delete_node, function() {
                             // tell your friends
                             session.broadcast(JSON.stringify({
                               node_added:{
