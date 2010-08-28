@@ -64,7 +64,7 @@ tree-path ([1,0,4])
     error(msg)
 
     # after registering
-    node_data(root_node)
+    node_data(bubble)
 
     # bubble creation
     bubble_created(id)

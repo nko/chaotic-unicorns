@@ -90,15 +90,34 @@ var change_color = function(color){
 }
 
   // changing tree structure
+  draw_node = function(node, par_id){
+  console.log(node, par_id)
+    var html_id = id_for_html(par_id) + '_' + $('.'+ id_for_html(par_id)).length
+    $('#protonode').clone().
+                  attr('id', html_id ).
+                  addClass('class', id_for_html(par_id)).
+                  attr('rel', id_for_html(par_id)).
+                  draggable(draggable_options).
+                  appendTo('#nodes').
+                  fadeIn(100)
+    if(node.subs){
+      $.each(function(cur){
+        draw_node(cur, id_for_json(html_id) )
+      })
+    }
+  }
+
 var draw_all_nodes =  function(node){
-//  add_node
+  console.log( node )
+  draw_node(node.subs[0], [0])
 }
 
 
-var add_node =  function(to){
+
+var add_node =  function(content, to){
   socket.send(json_plz({
     add_node: {
-      'content': '',
+      'content': content,
       'to': to,
     }
   }) )
@@ -152,7 +171,7 @@ $('#change_color').click(function(){
 
 $('.add_node').click(function(){
   var to_id = id_for_json( get_node_id(this) )
-  add_node(to_id)
+  add_node('', to_id)
   return false
 })
 
@@ -231,18 +250,13 @@ socket.on('message', function(msg) {
         break;case 'registered':
           //draw_all_nodes(val.root_node)
         break;case 'node_data':
-          draw_all_nodes(val.root_node)
+          //draw_all_nodes(val.bubble)
         break;case 'name_changed':
           // .. 
         break;case 'color_changed':
           // .. 
         break;case 'node_added':
-          $('#protonode').clone().
-                          appendTo('#nodes').
-                          attr('id', id_for_html(val.to) + '_9').
-                          attr('rel', id_for_html(val.to)).
-                          draggable(draggable_options).
-                          fadeIn(100)
+          draw_node({content: '', }, val.to)
         break;case 'node_moved':
           // .. 
         break;case 'node_deleted':
