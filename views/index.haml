@@ -8,10 +8,14 @@
   .button tool2
   .button tool3
 
-= partial('node', [{text: "i am root", id: "root"}])
-= partial('node', [{text: "node1", id:"none1"}])
-= partial('node', [{text: "noed2", id:"none2"}])
-= partial('node', [{text: "soöghsdfoöghöghsöghsoöghsöfvcnk<br>eogjitjtoih<br>iopjgiojütjioüj", id:"none3"}])
+= partial('node', [{text: "i am root", id: "root", rel:"none1,none2,none3"}])
+= partial('node', [{text: "node1", id:"none1", rel:"no1,no2"}])
+= partial('node', [{text: "noed2", id:"none2", rel:""}])
+= partial('node', [{text: "soöghsdfoöghöghsöghsoöghsöfvcnk<br>eogjitjtoih<br>iopjgiojütjioüj", id:"none3", rel:""}])
+
+
+= partial('node', [{text: "sudfef", id:"no1", rel:""}])
+= partial('node', [{text: "ösdgjg", id:"no2", rel:""}])
 
 %form{id: 'change_name_form' ,style: 'position:fixed;bottom:0px;right:0px'}
   %input{type: 'text', name: 'name'}
@@ -20,3 +24,5 @@
 %form{id: 'create_bubble_form' ,style: 'position:fixed;bottom:0px;left:0px'}
   %input{type: 'text', name: 'name'}
   %input{type: 'submit', value: 'create bubble'}
+
+%canvas#canvas
