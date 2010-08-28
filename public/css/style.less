@@ -65,17 +65,38 @@ body {
       font-style:bold;
       color:black;
       background:rgb(233,233,233);
-      //font-size:8px;
       text-decoration:none;
-      
-      :hover {
-        background:red;
-      }
+      clear:both;
     }
-    
     :hover {
       background:rgb(111,111,111);
       color:white;
+      .tooltip {
+        display:block;
+      }
+    }
+  
+    .tooltip {
+      .rounded_corners(4px);
+      padding:1px 5px 1px 5px;
+      display:none;
+      position:absolute;
+      z-index:1001;
+      background:black;
+      float:left;
+      right:133px;
+      margin-top:-16px;
+      .arrow {
+        border-color:transparent transparent transparent black;
+        border-style:solid;
+        border-width:4px;
+        position:absolute;
+        float:left;
+        height:0px;
+        width:0px;
+        right:-7px;
+        margin-top:3px;
+      }
     }
   }
   .body {
