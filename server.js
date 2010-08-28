@@ -76,6 +76,13 @@ db.connect(function(dbc) {
             client.send(JSON.stringify({
                 debug: {msg: 'hello world'}
             }) );
+            
+            client.on('disconnect', function() {
+                console.log('bye client')
+                if(session) {
+                    session.remove_client(client);
+                }
+            });
         
             client.on('message', function(msg) {
                 console.log("incoming: " + msg);
@@ -91,6 +98,18 @@ db.connect(function(dbc) {
                             bubble_created: {hash: bubble.hash}
                         }));
                     });
+                } else if(stanza.add_node) {
+                    if(session) {
+                        // TODO: fake?
+                        session.broadcast(JSON.stringify({
+                          node_added:{
+                            id: stanza.add_node.id,
+                            to: stanza.add_node.to,
+                          }
+                        }) );
+                    } else {
+                        error("No session");
+                    }
                 } else if(stanza.delete_node) {
                     if(session) {
                         // TODO: fake!

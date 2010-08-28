@@ -2,6 +2,16 @@ exports.session_manager = function() {
     // manages the bubble-sessions
     var manager = {sessions: {}};
     
+    var remove_session = function(hash) {
+        delete manager.sessions[hash];
+        
+        for(attr in manager.sessions) {
+            if(manager.sessions.hasOwnProperty(attr)) {
+                console.log(attr);
+            }
+        }
+    }
+    
     manager.get = function(hash) {
         if(manager.sessions[hash]) {
             return manager.sessions[hash];
@@ -16,7 +26,7 @@ exports.session_manager = function() {
                     var participants = session.participants;
                     
                     for(attr in participants) {
-                        if(participant.hasOwnProperty(attr)) {
+                        if(participants.hasOwnProperty(attr)) {
                             return false;
                         }
                     }
@@ -29,11 +39,11 @@ exports.session_manager = function() {
                 }
                 
                 session.remove_client = function(client) {
-                    session.participants[client.sessionId] = undefined;
+                    delete session.participants[client.sessionId];
                     
                     if(orphaned()) {
                         console.log("session died of loneliness")
-                        manager.remove(session);
+                        remove_session(hash);
                     }
                 }
                 
