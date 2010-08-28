@@ -1,4 +1,5 @@
 $(document).ready(function(){
+
 $(".holder").animate({width:'-=15px'}, 500);
 
 // helpers
@@ -19,9 +20,12 @@ $(".holder").animate({width:'-=15px'}, 500);
   }
   
   // visual
-  var fade_and_remove = function(id){
-    $('#' + id).fadeOut(90)
-    setTimeout("$('#" + id + "').remove()",100)
+  var fade_and_remove = function(id) {
+    var current  = $('#' + id);
+    current.fadeOut(90, function () {
+      current.remove();
+      updateCanvas();
+    })
   }
 
 updateCanvas();
@@ -30,8 +34,8 @@ updateCanvas();
 $(".draggable").draggable({drag:updateCanvas});
 
 $(".holder").hover(
-    function () {$(this).animate({width:'+=15px'}, 100);},//handleIn
-    function () { $(this).animate({width:'-=15px'}, 100);} //handleOut
+    function () {$(this).animate({width:'+=15px'}, 100).parent().animate({marginLeft:'-=15px'},100);},//handleIn
+    function () { $(this).animate({width:'-=15px'}, 100).parent().animate({marginLeft:'+=15px'},100);} //handleOut
 );
 
 
