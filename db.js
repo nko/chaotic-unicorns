@@ -41,25 +41,25 @@ exports.connect = function(cb) {
                     cb(null);
                 } else {
                     console.log("collection found");
-                    bubble = {id: random_hash(), content: content, subs: [], users: []};
+                    bubble = {hash: random_hash(), content: content, subs: [], users: []};
                     coll.insert(bubble, function(err, res) {
                         if(err) {
                             console.log(err);
                             cb(null);
                         } else {
                             console.log("bubble created");
-                            cb(get_bubble(bubble.id));
+                            cb(get_bubble(bubble.hash));
                         }
                     });
                 }
             });
         }
         
-        var get_bubble = con.get_bubble = function(id) {
-            var bubble = {id: id};
+        var get_bubble = con.get_bubble = function(hash) {
+            var bubble = {hash: hash};
             
             var findOne = function(criteria, select, cb) {
-                criteria.id = id;
+                criteria.hash = bubble.hash;
                 client.collection('bubbles', function(err, coll) {
                     coll.findOne(criteria, select, function(err, res) {
                         if(err) {
@@ -73,6 +73,8 @@ exports.connect = function(cb) {
             }
             
             var update = function(criteria, data, cb) {
+                criteria.hash = bubble.hash;
+                
                 client.collection('bubbles', function(err, coll) {
                     coll.update(criteria, data, function(err, res) {
                         if(err) {
@@ -89,7 +91,7 @@ exports.connect = function(cb) {
                 var user = {data: data};
                 
                 user.rename = function(name, cb) {
-                    update({'id': data.id, 'users.name': data.name},
+                    update({'users.name': data.name},
                         {'$set': {"users.$.name": name}},
                         function() {
                             data.name = name;
@@ -101,7 +103,7 @@ exports.connect = function(cb) {
                 }
                 
                 user.set_color = function(color, cb) {
-                    update({'id': data.id, 'users.name': data.name},
+                    update({'users.name': data.name},
                         {'$set': {"users.$.color": color}},
                         function() {
                             data.color = color;
