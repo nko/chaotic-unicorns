@@ -17,6 +17,9 @@ body {
   width:80%;
   height:50px;
   left:10%;
+  background:rgba(0,0,0,0.9);
+  color:white;
+  z-index:1000;
 }
 
 #tool_bar {
@@ -25,15 +28,29 @@ body {
   height:80%;
   width:77px;
   top:10%;
+  background:rgba(0,0,0,0.9);
+  color:white;
+  z-index:1000;
 }
 
 
 .node {
-  border:1px solid black;
+  border:1px solid rgba(11,11,11,0.4);
   position:absolute;
   min-width:@node_size;
   min-height:@node_size;
+  background:rgba(88,88,88,0.4);
+  .rounded_corners(@node_size / 3);
+  padding:@node_size / 6;
+  
 }
+
+// dummy
+.draggable {
+  border:1px solid gold;
+  cursor:move;
+}
+
 
 
 #root {
