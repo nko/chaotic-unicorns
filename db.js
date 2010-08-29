@@ -34,8 +34,8 @@ exports.connect = function(cb) {
     client.open(function(err, client) {
         var con = {client: client};
         
-        con.create_bubble = function(content, cb) {
-            var bubble, mindmap, node;
+        con.create_bubble = function(content, name, color, cb) {
+            var bubble, mindmap, node, user_id = 23;
             
             console.log("creating bubble")
             
@@ -47,18 +47,19 @@ exports.connect = function(cb) {
                 } else {
                     console.log("collection found");
                     
-                    node = create_node(content);
+                    node = create_node(content, user_id);
                     mindmap = {content: content, subs: [node]};
                     bubble = {
                         hashes: [random_hash(), random_hash(), random_hash()],
                         content: content,
                         subs: [mindmap],
-                        users: {},
+                        users: {23: {name: name, color: color}},
                     };
                     
                     coll.insert(bubble, function(err, res) {
                         if(err) {
                             console.log(err);
+                            console.log(err.stack)
                             cb(null);
                         } else {
                             console.log("bubble created");
@@ -198,44 +199,22 @@ exports.connect = function(cb) {
             }
             
             var del_node = bubble.del_node = function(position, cb) {
-                var filter, tmp;
-                
-                if(position.length == 1) {
-                    filter = {}
-                } else {
-                    filter = 1;
-                    for(var i = position.length - 2; i >= 0; i--) {
-                        a = {};
-                        a[position[""+i]] = filter;
-                        filter = {subs: a}
+                findOne({}, {}, function(res) {
+                    var diff, subs = res.subs, cur = subs;
+                    
+                    console.log("sub-move");
+                    
+                    for(var i = 0; i < position.length - 2; i++) {
+                        console.log(cur);
+                        cur = cur[position[i]].subs
                     }
-                }
-                
-                console.log('filter:')
-                console.log(filter)
-                
-                findOne({}, filter, function(res) {
-                    if(err) {
-                        console.log('fehloer')
-                        console.log(err);
-                    } else {
-                        subs = res.subs;
-                        subs.splice(position[position.length-1], 1);
-                        
-                        var adress = "subs." + position.slice(0, -1).join('.subs.') + ".subs";
-                        var diff = {};
-                        diff[adress] = subs;
-                        
-                        update({}, {'$set': diff}, cb);
-                    }
+                    
+                    console.log(cur);
+                    delete cur[position[position.length-1]];
+                    console.log(cur);
+                    
+                    update({}, res, cb);
                 });
-                
-                /*
-                var adress = "subs." + position.join('.subs.');
-                var diff = {};
-                diff[adress] = 1;
-                update({}, {'$unset': diff}, cb);
-                */
             }
             
             bubble.move_node = function(from, to, cb) {
@@ -250,6 +229,12 @@ exports.connect = function(cb) {
                             cb(res);
                         });
                     });
+                });
+            }
+            
+            bubble.destroy = function() {
+                client.collection('bubbles', function(err, coll) {
+                    coll.remove({hashes: hash});
                 });
             }
             

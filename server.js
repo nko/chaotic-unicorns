@@ -11,8 +11,9 @@ var express = require('express'),
     db = require('./db');
 
 var error_catcher = function(error) {
-    console.log("EXCEPION");
-    console.log(e);
+    console.log("EXCEPTION");
+    console.log(error);
+    console.log(error.stack)
 }
 
 db.connect(function(dbc) {
@@ -93,6 +94,12 @@ db.connect(function(dbc) {
             client.on('error', error_catcher)
         
             client.on('message', function(msg) {
+                if(session && !session.alive) {
+                    console.log('clearing client from destroyed session');
+                    console.log(session.alive)
+                    session = null;
+                }
+                
                 try {
                     console.log("incoming: " + msg);
                     stanza = JSON.parse(msg);
@@ -131,10 +138,14 @@ db.connect(function(dbc) {
                                     bubble.create_user(d.name, d.color, function(res) {
                                         user = res;
                                         
+                                        console.log('adding session to client');
+                                        
                                         // user/session management
                                         session = session_manager.get(d.hash);
                                         session.broadcast({registered: {name: d.name, color: d.color}})
                                         session.add_client(client);
+                                        
+                                        console.log(session)
                                     });
                                 }
                             } else {
@@ -144,7 +155,14 @@ db.connect(function(dbc) {
                         });
                     // create a bubble
                     } else if(stanza.create_bubble) {
-                        dbc.create_bubble(stanza.create_bubble.name, function(bubble) {
+                        d = stanza.create_bubble
+                        
+                        if(d.user_name.trim() === '' || d.bubble_name === '') {
+                            error("Invalid name");
+                            return;
+                        }
+                        
+                        dbc.create_bubble(d.bubble_name, d.user_name, d.user_color, function(bubble) {
                             client.send(JSON.stringify({
                                 bubble_created: {hash: bubble.hash},
                             }));
@@ -165,6 +183,12 @@ db.connect(function(dbc) {
                     } else if(stanza.change_name) {
                         if(session) {
                             name = stanza.change_name.name;
+                            
+                            if(name.trim() === '') {
+                                error("Invalid name");
+                                return;
+                            }
+                            
                             user.rename(name);
                             session.broadcast(JSON.stringify({name_changed: {
                               id:   user.id,
@@ -236,14 +260,21 @@ db.connect(function(dbc) {
                         } else {
                             error("No write permissions");
                         }
+                    // close the bubble
+                    } else if(stanza.destroy) {
+                        if(session && rights > 1) {
+                            session.destroy();
+                            bubble.destroy();
+                        } else {
+                            error("Not enough permissions");
+                        }
                     } else {
                         error("Unknown method");
                     }
                 }
                 catch(e)
                 {
-                    console.log("EXCEPION");
-                    console.log(e);
+                    error_catcher(e);
                 }
             });
         });

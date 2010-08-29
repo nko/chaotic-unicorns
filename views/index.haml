@@ -1,15 +1,19 @@
 #title_bar
-  #title= title
+  #title
+    <h1 id='bubble'>Node<sup>❷</sup></h1> <h2 id='hashes'>(hashs)</h2>
+    %a.delete_node.button{href: "#", id: 'delete_bubble'}
+      .tooltip
+        .bubble
+          .arrow
+          burst bubble
 
 #tool_bar
   %em
     editing:
   %form{id: 'change_name_form' }
-    name
-    %input{type: 'text',   name: 'name'}
-    %input{type: 'submit', value: 'update'}
     %div#colorpicker
-      %div{style:"background-color: #0000ff"}
+    %input{type: 'text',   name: 'name', id: 'change_name'}
+    %input{type: 'submit', value: 'update'}
   %ul#user_list
 
 = partial('node', [{text:" _", id: "protonode", rel:''}])
@@ -21,3 +25,5 @@
 %form{id: 'create_bubble_form' ,style: 'position:fixed;top:0px;right:0px;z-index:9999'}
   %input{type: 'text', name: 'name'}
   %input{type: 'submit', value: 'create bubble'}
+
+#error

@@ -4,22 +4,8 @@
 
 * Homepage (+ bubble creation)
 * ...
-* user documentation
+* user documentation (start page creation with init_start.js)
 * "catch attention" with blinking nodes
-
-frontend
-
-* nodes positionierung
-* nodes moven
-* ...
-
-backend
-
-* ...
-
-jan
-
-* koord system bauen
 
 ## Naming Conventions
 
@@ -54,11 +40,10 @@ tree-path ([1,0,4])
     edit_content(id, content)
 
     # bubble management
-    create_bubble(name)
+    create_bubble(bubble_name, user_name, user_color)
     
     # destructive stuff
     # no idea how to implement this ...
-    kick(name)
     destroy()
 
 ### Signals
@@ -66,7 +51,7 @@ tree-path ([1,0,4])
 #### Personal Messages
 
     # error message
-    error(msg)
+    err(msg)
 
     # after registering
     node_data(bubble)
@@ -83,19 +68,23 @@ tree-path ([1,0,4])
     color_changed(name, color)
 
     # changing tree structure
-    node_added(content, to)
+    node_added(content, to, user_id)
     node_moved(id, to)
     node_deleted(id)
 
     # changing properties
     position_changed(id, $DODO_FRAGEN)
     content_edited(id, content)
+    
+    # involuntary quit
+    destroyed()
 
 ## Data Structure
 
 ### node
 
     {
+        user: creator_id
         content: '',
         subs: [$node, ...],
     }
@@ -108,7 +97,7 @@ node with
         hashes: ['ro_hash', 'rw_hash', 'admin_hash'],
         content: 'bubble name',
         subs: [$mindmap_node, ...],
-        users: [{name: '', color: ''}, ...],
+        users: {id: {name: '', color: ''}, ...},
     }
 
 ### mindmap
@@ -119,3 +108,27 @@ node with
         content: 'mindmap name',
         subs: [$node, ...],
     }
+
+
+### todo
+
+spawn-position (add)
+
+node body verschwindet bug
+
+client delete
+
+read-only mm
+z-index top
+destroy
+
+
+startseite
+
+error-style
+end-design
+
+#### maybe
+
+drehding vom start
+logout (left)
