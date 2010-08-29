@@ -12,6 +12,7 @@
 }
 
 body{
+  text-align:left;
   padding: 0px;
   margin: 0px;
   background:rgb(233,233,233);
@@ -46,11 +47,11 @@ body{
 }
 
 .node {
-  position:absolute;
   clear:both;
   z-index:100;
   
   .holder {
+    position:relative;
     float:left;
     text-align:center;
     .rounded_corner_top_left(@node_size * 0.1);
@@ -142,21 +143,12 @@ body{
 /*
 #protonode{
   display:none;
-}*/
+}
+*/
 
 .draggable {
   .holder {
     //cursor:move;
-  }
-}
-
-.root {
-  top:50%;
-  left:50%;
-  z-index:101;
-  .body {
-    font-weight:bold;
-    font-size:105%;
   }
 }
 
@@ -167,6 +159,17 @@ body{
   position:absolute;
   top:0px;
   left:0px;
+  border:1px solid red;
+}
+
+.root {
+  top:50%;
+  left:50%;
+  z-index:101;
+  .body {
+    font-weight:bold;
+    font-size:105%;
+  }
 }
 
 

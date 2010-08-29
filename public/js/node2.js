@@ -3,6 +3,7 @@ $(document).ready(function(){
 var initNode = function (_node) {
     var node = $(_node);
     var holder = node.find(".holder");
+    var body = node.find(".body");
     var canvas = $("#canvas");
     node.css({left:canvas.offset().left + canvas.width() / 2, top:canvas.offset().top + canvas.height() / 2});
     initSpring(node);
@@ -11,11 +12,20 @@ var initNode = function (_node) {
         function () {$(this).removeClass("fixed");}
     );
     var h = holder.height();//var h = holder.parent().find(".body").height();
+    holder.width('20px');
     holder.animate({width:'-=15px', height:h+"px"}, 500);
     holder.hover(
-        function () {$(this).animate({width:'+=15px'}, 100).parent().animate({marginLeft:'-=15px'},100);},//handleIn
-        function () {$(this).animate({width:'-=15px'}, 100).parent().animate({marginLeft:'+=15px'},100);} //handleOut
+        function () {$(this).animate({width:'+=15px'}, 100, function () {
+            $(this).css("overflow","visible");
+        }).parent().animate({marginLeft:'-=15px',width:'+=15px'},100);},//handleIn
+        function () {
+            $(this).css("overflow","hidden");
+            $(this).animate({width:'-=15px'}, 100).parent().animate({marginLeft:'+=15px',width:'-=15px'},100);} //handleOut
     );
+    node.css({height:Math.max(body.height(),holder.height())+5,
+               width:holder.width()+body.width()+5,
+               position:"absolute"
+             });
 };
 $(".node").each(function (_, _node) {initNode(_node);});
 updateCanvas();
