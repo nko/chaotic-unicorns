@@ -1,9 +1,14 @@
+
 $(document).ready(function(){
 
 //do dodo
 var holder_min_height = 0;
+var READONLY = false
 var springs_physics = springsPhysics.generate()
     springs_physics.static();
+
+var ani_man = springs_physics.ani_manager(42, 50);
+//ani_man.start();
 
 var initNode = function (_node) {
     var node = $(_node);
@@ -109,7 +114,7 @@ $('#change_name').val( initial_name )
     $( "#error" ).dialog(
     {
 //        modal:true,
-        'position': [3,3],
+//        'position': [3,3],
         buttons:
         {
           "Ok": function() { $(this).dialog("close"); },
@@ -123,8 +128,8 @@ $('#change_name').val( initial_name )
   }
   
   // visual
-  var fade_and_remove = function(id) {
-    var current  = $('#' + id_for_html(id));
+  var fade_and_remove = function(html_id) {
+    var current  = $('#' + html_id);
     current.fadeOut(90, function () {
       current.remove();
       //updateCanvas();
@@ -135,7 +140,8 @@ $('#change_name').val( initial_name )
 var draggable_options = {
     stop: function () {
         springs_physics.update($(this)[0].id);
-        springs_physics.pre_render(10,42,500);
+        //springs_physics.live_render(10, 42, 500);
+        ani_man.animate(500);
     },
     drag: function () {
         springs_physics.update($(this)[0].id);
@@ -196,7 +202,7 @@ var change_color = function(color){
 
 // changing tree structure
 draw_node = function(node, par_id){
-    console.log(node, par_id)
+  if(node) {
     var html_id = id_for_html(par_id) + '_' + ($('.'+ id_for_html(par_id)).length )
     obj = $('#protonode').clone().
                   attr('id', html_id ).
@@ -213,32 +219,45 @@ draw_node = function(node, par_id){
     par.attr('relation',par.attr('relation')+','+html_id);
     initNode(obj, par);
     springs_physics.add(html_id, id_for_html(par_id));
-    springs_physics.static();
     if(node.subs) {
       $.each(node.subs, function(_,cur){
         draw_node(cur, id_for_json(html_id) )
       });
     }
+  }
 }
 
-var draw_all_nodes =  function(node){
+var draw_all_nodes = function(node) {
     draw_node(node.subs[0].subs[0], [0]);
     $('#n_0_0').addClass("root");
-    springs_physics.pre_render(20,100,1000);
-}
+    ani_man.animate(1000, 2);
+};
 
 var delete_with_children = function(current){
 console.log('DEL')
-console.log(current)
-    $.each(current.attr("relation").split(","),function (_,relation) {
+console.log($(current))
+
+    var children = ''
+    if( $(current).attr('relation') && $(current).attr('relation').length ){
+      children = $(current).attr("relation")
+    }
+    clog(4444444)
+    console.log(children)
+    $.each(children.split(","),function (_,relation) {
+    console.log(relation)
         if(relation != "") {
             var target = $("#"+relation);
+            clog('t')
+            clog(target)
             if(target.length) {
+            console.log('BBBBBBBBBBBBBBB')
                delete_with_children(target)
-               fade_and_remove( $(this)[0].id )
             }
         }
     });
+    clog('REM')
+    $(current).remove()
+//    fade_and_remove( $(current)[0].id )
 }
 
 
@@ -336,12 +355,16 @@ $('#create_bubble_form').submit(function(){
   return false
 })
 
-$('.node p').live('dblclick', function(){
-  var parent = $(this).parent()
-  $(this).replaceWith('<input type="text" class="in-place-edit" value="' + $(this).text() + '" />').focus()
-  parent.find('input.in-place-edit').focus()
-  
-})
+var edit_node_action = function (obj) {
+    var parent = obj.parent();
+    obj.replaceWith('<input type="text" class="in-place-edit" value="' + obj.text() + '" />').focus();
+    parent.find('input.in-place-edit').focus();
+};
+
+if(!READONLY){
+    $('.node p').live('dblclick', function(){edit_node_action($(this));});
+    $('.edit.button').live('click',function(){edit_node_action($(this).parents(".node").find("p"));});
+}
 
 var inplace_submit_and_restore_p = function(ele){
   edit_content( get_node_id(ele), $(ele).val() )
@@ -379,7 +402,7 @@ socket.on('message', function(msg) {
         break;case 'registered':
           append_user(val.id, val) 
         break;case 'left':
-          fade_and_remove( $('#user_' + val.id) )
+          fade_and_remove( $('#user_' + html_for_id(val.id)) )
         break;case 'node_data':
           $('#bubble').text( val.bubble.content )
           // build hash string
@@ -388,14 +411,18 @@ socket.on('message', function(msg) {
           
           if( val.bubble.hasOwnProperty('hashes') ){
               hash_string = ''
-              if( val.bubble.hashes.length == 3 ){
-                hash_string = hash_string.concat( '<a href="' + location.host + '/' + val.bubble.hashes[0] + '">admin version</a>' )
-              }
+//              if( val.bubble.hashes.length == 3 ){
+  //              hash_string = hash_string.concat( '<a href="' + location.host + '/' + val.bubble.hashes[0] + '">admin version</a>' )
+    //          }
               
               if( val.bubble.hashes.length >= 2 ){
-                hash_string = hash_string.concat( '<a href="' + location.host + '/' + (val.bubble.hashes[val.bubble.hashes.length - 2]) + '">read-only version</a>')
+                hash_string = hash_string.concat( '<a href="http://' + location.host + '/' + (val.bubble.hashes[val.bubble.hashes.length - 2]) + '">main version,</a> ')
               }
-              hash_string = hash_string.concat( '<a href="' + location.host + '/' + val.bubble.hashes[val.bubble.hashes.length - 1] + '">read-only version</a>')
+              hash_string = hash_string.concat( '<a href="http://' + location.host + '/' + val.bubble.hashes[val.bubble.hashes.length - 1] + '">read-only version</a>')
+              
+              if( val.bubble.hashes.length == 0 ){
+                READONLY = true
+              }
           }
           console.log('hs' + hash_string)
           $('#hashes').html( hash_string )
@@ -411,20 +438,23 @@ socket.on('message', function(msg) {
           $('.user_' + val.id).find('.holder').css('background', val.color);//.css('border', '1px solid ' + val.color)
         break;case 'node_added':
           draw_node(val, val.to)
+          ani_man.animate(1500, 3);
+          
+          //Width fix
+          var obj = $("#"+val.id);
+          obj.width(obj.find(".body").width()+33+obj.find(".holder").width());
+          obj.height(obj.find(".body").height()+13);
+
         break;case 'node_moved':
           // .. 
         break;case 'node_deleted':
-        console.log( $('#'+id_for_html).find('.node') )
-        springs_physics.remove(id_for_html);
-//        clog($('#'+id_for_html))
-        delete_with_children( $('#'+id_for_html) );
+            jq_delete = $('#'+id_for_html(val.id))
+            springs_physics.remove( jq_delete[0].ida );
+            delete_with_children( jq_delete );
         break;case 'position_changed':
           // .. 
         break;case 'content_edited':
           $('#' + id_for_html(val.id) + ' p').text(val.content);
-          var obj = $("#"+id_for_html(val.id));
-          obj.width(obj.find(".body").width()+23+obj.find(".holder").width());
-          obj.height(obj.find(".body").height()+13);
           // .. 
         break;case 'bubble_created':
           location.href = '/' + val.hash
@@ -469,5 +499,8 @@ $('#colorpicker').ColorPicker({
     }
 })
 
+$('#real_time').click(function(){
+    ani_man.toggle();
+})
 // close (document ready)
 });

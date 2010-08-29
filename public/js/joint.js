@@ -2,13 +2,13 @@
 var springsPhysics = function () {
 
     // defaults
-
+    
     var _default = {
             length:   80,   // 100
-            strength: 500,  // 500
+            strength: 300,  // 500
             mass:     342,  // 342
             charge:   800,  // 800
-            friction: 0.9,  // 0.9
+            friction: 0.5,  // 0.9
         };
 
     // helper
@@ -47,22 +47,74 @@ var springsPhysics = function () {
             return draw(engine);
         };
         var step = function (/*time in millisec*/ ms, /*number of steps*/ nr) {
-            var dt = ms / 1000;
+            var dt = ms / nr / 1000;
             for(var i = 0 ; i < nr ; i++) simulate(engine, dt);
             return engine;
         };
         var pre_render = function (/*time in millisec*/ ms, /*number of steps*/ nr, /*animation time*/ anims) {
-            step(ms, nr);
             if(typeof(anims) == "undefined") var ani = ms; else  var ani = anims;
+            step(ms, nr);
             animate(engine, ani);
             return draw(engine);
+        };
+        var live_render = function (/*time in millisec*/ ms, /*number of steps*/ nr, /*animation time*/ anims) {
+            if(typeof(anims) == "undefined") var ani = ms; else  var ani = anims;
+            step(ms, nr*ani/1000);
+            console.log(ms, nr*ani/1000)
+            var id = setInterval(function () {dom_draw(engine);},ani/nr);
+            setTimeout(function() {clearInterval(id);},ani);
+            //setTimeout("clearInterval("+id+")",ani);
+            animate(engine, ani);
+            return draw(engine);
+        };
+        var ani_manager = function (/*number of steps per sec*/ nr, scale) {
+            var interval;
+            var manager = {};
+            
+            var oneStep = function() {
+                realtime(1000/nr);
+            };
+            
+            var start = manager.start =  function() {
+                if(typeof(interval) === "undefined") {
+                    interval = setInterval(oneStep, 1000/nr);
+                }
+            }
+            
+            var stop = manager.stop =  function() {
+                if(typeof(interval) !== "undefined") {
+                    clearInterval(interval);
+                }
+            }
+            
+            manager.animate = function (/*animation time*/ anims, special_scale) {
+                if(typeof(special_scale) === "undefined") {
+                    special_scale = 1;
+                }
+                
+                if(interval === undefined) {
+                    live_render(anims*scale*special_scale, nr, anims);
+                    console.log('starting animation', anims/(scale*special_scale), nr, anims);
+                }
+            };
+            
+            manager.toggle = function() {
+                if(interval === undefined) {
+                    start();
+                } else {
+                    stop()
+                }
+            };
+            
+            return manager;
         };
         var add = function (nodeid,parid) {return add_node(engine,nodeid,parid);};
         var update = function (nodeid) {return update_node(engine,nodeid);};
         var remove = function (nodeid) {return remove_node(engine,nodeid);};
         var static = function () {return draw(engine);};
         return {realtime:realtime, step:step, pre_render:pre_render,
-                static:static, add:add, update:update, remove:remove};
+                static:static, add:add, update:update, remove:remove,
+                live_render:live_render, ani_manager: ani_manager};
     };
 
     // body ---
@@ -87,6 +139,7 @@ var springsPhysics = function () {
                     mass: params.mass,
                     friction: params.friction,
                     joints: {},
+                    parent:0,
                 };
             //get joints
             $.each(current.attr("relation").split(","),function (_,relation) {
@@ -105,7 +158,10 @@ var springsPhysics = function () {
             });
         });
         //fill relations with nodes
-        $.each(joints,function (_,joint) {joint.target = nodes[joint.target];});
+        $.each(joints,function (_,joint) {
+            joint.target = nodes[joint.target];
+            joint.target.parent = joint.source;
+        });
         return {nodes:nodes, joints:joints, params:params};
     };
 
@@ -177,13 +233,31 @@ var springsPhysics = function () {
         return engine;
     };
     
+    var dom_draw = system.dom_draw = function (engine) {
+        var window = $("#nodes");
+        var obj = $("#canvas");
+        var canvas = obj[0];
+        canvas.height = obj.height();
+        canvas.width  = obj.width();
+        var g = canvas.getContext("2d");
+        g.clearRect(0, 0, canvas.width, canvas.height);
+        g.beginPath();
+        $.each(engine.joints, function (_, joint) {
+            var src = _position_helper(window.offset(), joint.source.object);
+            var trg = _position_helper(window.offset(), joint.target.object);
+             // drawing ...
+            g.moveTo(src.position.x, src.position.y);
+            g.lineTo(trg.position.x, trg.position.y);
+        });
+        g.stroke();
+        g.closePath();
+        return engine;
+    };
+    
     var animate = system.animate = function (engine, dt) {
         $.each(engine.nodes, function (_, node) {
-            var id = setInterval(function () {draw(engine);},20);
             var pos = vsub(node.position, node.middle);
-            node.object.animate({left:pos.x, top:pos.y}, dt, function () {
-                clearInterval(id);
-            });
+            node.object.animate({left:pos.x, top:pos.y}, dt);
         });
         return engine;
     };
@@ -240,8 +314,15 @@ var springsPhysics = function () {
     var remove_node = system.remove_node = function (engine, nodeid) {
         if(nodeid in engine.nodes) {
             var node = engine.nodes[nodeid];
-            $each(node.joints, function (_, joint) {
-                engine.joints.index(joint);
+            $.each(node.joints, function (_, joint) {
+                $.each(engine.joints, function (index, other) {
+                    //dirty but quick to code -.-
+                    if(joint.target.id == other.target.id && joint.source.id == other.source.id ){
+                      delete engine.joints[index];
+                    } else if(joint.target.id == nodeid) {
+                      delete engine.joints[index];
+                    }
+                });
             });
             delete engine.nodes[nodeid];
         }
