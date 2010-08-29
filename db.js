@@ -130,7 +130,7 @@ exports.connect = function(cb) {
                 user.rename = function(name, cb) {
                     diff = {}
                     diff["users."+user.id+".name"] = name
-                    update({}, diff, function() {
+                    update({}, {'$set': diff}, function() {
                             user.name = name;
                             if(cb !== undefined) {
                                 cb();
