@@ -19,8 +19,8 @@ var random_hash = function() {
     return hash;
 }
 
-var create_node = function(content) {
-    return {content: content, subs: []};
+var create_node = function(content, user) {
+    return {content: content, user: user, subs: []};
 }
 
 exports.connect = function(cb) {
@@ -53,7 +53,7 @@ exports.connect = function(cb) {
                         hashes: [random_hash(), random_hash(), random_hash()],
                         content: content,
                         subs: [mindmap],
-                        users: [],
+                        users: {},
                     };
                     
                     coll.insert(bubble, function(err, res) {
@@ -128,9 +128,9 @@ exports.connect = function(cb) {
                 var user = {name: name, color: color};
                 
                 user.rename = function(name, cb) {
-                    update({'users.name': user.name},
-                        {'$set': {"users.$.name": name}},
-                        function() {
+                    diff = {}
+                    diff["users."+user.id+".name"] = name
+                    update({}, diff, function() {
                             user.name = name;
                             if(cb !== undefined) {
                                 cb();
@@ -139,10 +139,10 @@ exports.connect = function(cb) {
                     );
                 }
                 
-                user.set_color = function(color, cb) {
-                    update({'users.name': user.name},
-                        {'$set': {"users.$.color": color}},
-                        function() {
+                var set_color = user.set_color = function(color, cb) {
+                    diff = {};
+                    diff["users."+user.id+".color"] = color;
+                    update({}, {"$set": diff}, function() {
                             user.color = color;
                             if(cb !== undefined) {
                                 cb();
@@ -151,17 +151,38 @@ exports.connect = function(cb) {
                     );
                 }
                 
-                findOne({'users.name': name}, {'_id': 1}, function(res) {
-                    if(res) {
-                        console.log('updating user ...');
-                        update({'users.name': name}, {'$set': {'users.$.color': color}}, function(res) {
-                            cb(user);
-                        });
-                    } else {
-                        console.log('creating user ...')
-                        update({}, {'$push': {'users': {name: name, color: color}}}, function() {
+                findOne({}, {'users': 1}, function(res) {
+                    console.log("asmdsa")
+                    console.log(res)
+                    
+                    if(!res) {
+                        cb(null)
+                        return;
+                    }
+                    
+                    // ugly ...
+                    users = res.users;
+                    for(id in users) {
+                        if(users.hasOwnProperty(id) && users[id].name === name) {
+                            console.log("id found: " + id)
+                            user.id = id;
+                        }
+                    }
+                    
+                    if(user.id === undefined) {
+                        console.log('creating user ...');
+                        user.id = Math.floor(Math.random()*65536);
+                        diff = {};
+                        diff["users."+user.id] = {name: name, color: color};
+                        update({}, {'$set': diff}, function() {
+                            console.log(res);
                             cb(user);
                         })
+                    } else {
+                        console.log('updating user ...');
+                        set_color(color, function() {
+                            cb(user);
+                        });
                     }
                 });
             }
@@ -173,10 +194,10 @@ exports.connect = function(cb) {
                 update({}, {'$set': diff}, cb);
             }
             
-            var add_node = bubble.add_node = function(position, content, cb) {
+            var add_node = bubble.add_node = function(position, content, user, cb) {
                 var adress = "subs." + position.join('.subs.') + ".subs";
                 var diff = {};
-                diff[adress] = create_node(content);
+                diff[adress] = create_node(content, user);
                 update({}, {'$push': diff}, cb);
             }
             
