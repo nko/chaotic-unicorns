@@ -8,17 +8,17 @@
   .button tool2
   .button tool3
 
-= partial('node', [{text:"__proto__", id: "protonode", rel:''}])
+= partial('node', [{text:" _", id: "protonode", rel:''}])
 #nodes.fullscreen
-
+  %canvas#canvas.fullscreen
 
 
 %form{id: 'change_name_form' ,style: 'position:fixed;bottom:0px;right:0px;z-index:9999'}
   %input{type: 'text', name: 'name'}
   %input{type: 'submit', value: 'change name'}
+  %input#colorpicker
+
   
 %form{id: 'create_bubble_form' ,style: 'position:fixed;bottom:0px;left:0px;z-index:9999'}
   %input{type: 'text', name: 'name'}
   %input{type: 'submit', value: 'create bubble'}
-
-%canvas#canvas.fullscreen
