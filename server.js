@@ -10,6 +10,11 @@ var express = require('express'),
     session = require('./session'),
     db = require('./db');
 
+var error_catcher = function(error) {
+    console.log("EXCEPION");
+    console.log(e);
+}
+
 db.connect(function(dbc) {
     var app = module.exports = express.createServer();
 
@@ -35,9 +40,10 @@ db.connect(function(dbc) {
     // Routes
 
     app.get('/', function(req, res){
-        res.render('start.haml', {
+        res.render('index.haml', {
             locals: {
-                title: 'Node²'
+                title: 'Node²',
+                hash: '',
             }
         });
     });
@@ -80,95 +86,95 @@ db.connect(function(dbc) {
                 console.log('bye client')
                 if(session) {
                     session.remove_client(client);
-                    session.broadcast({left: {name: user.name}});
+                    session.broadcast(JSON.stringify({left: {name: user.name}}));
                 }
             });
+            
+            client.on('error', error_catcher)
         
             client.on('message', function(msg) {
-                console.log("incoming: " + msg);
-                stanza = JSON.parse(msg);
-                
-                // enter a chat
-                if(stanza.register) {
-                    if(session) {
-                        error("Already attached to a session");
-                        return;
-                    }
+                try {
+                    console.log("incoming: " + msg);
+                    stanza = JSON.parse(msg);
                     
-                    // TODO: move bubble into session?
-                    d = stanza.register
-                    
-                    // db-abstraction
-                    bubble = dbc.get_bubble(d.hash);
-                    bubble.create_user(d.name, d.color, function(res) {   
-                        user = res;
-                        
-                        if(user) {
-                            // sending the tree
-                            bubble.get_tree(function(tree) {
-                                console.log("tree:");
-                                console.log(tree);
-                                
-                                if(tree) {
-                                    for(var n = 0; n < tree.hashes.length; n++) {
-                                        if(tree.hashes[n] == d.hash) {
-                                            console.log("rights: " + n);
-                                            rights = n;
-                                        }
-                                    }
-                                    
-                                    tree.hashes = tree.hashes.slice(0, rights + 1);
-                                    
-                                    client.send(JSON.stringify({node_data: {bubble: tree}}));
-                                    
-                                    // session management
-                                    session = session_manager.get(d.hash);
-                                    session.broadcast({registered: {name: d.name, color: d.color}})
-                                    session.add_client(client);
-                                } else {
-                                    // TODO: close connection?
-                                    error("Unknown Hash");
-                                }
-                            });
-                        } else {
-                            error("Unknown Hash");
+                    // enter a chat
+                    if(stanza.register) {
+                        if(session) {
+                            error("Already attached to a session");
+                            return;
                         }
-                    });
-                // create a bubble
-                } else if(stanza.create_bubble) {
-                    dbc.create_bubble(stanza.create_bubble.name, function(bubble) {
-                        client.send(JSON.stringify({
-                            bubble_created: {hash: bubble.hash},
-                        }));
-                    });
-                // change your color
-                } else if(stanza.change_color) {
-                    if(session) {
-                        color = stanza.change_color.color;
-                        user.set_color(color);
-                        session.broadcast(JSON.stringify({color_changed:{
-                          id:    user.id,
-                          color: color
-                        }}));
-                    } else {
-                        error("No session");
-                    }
-                // change your name
-                } else if(stanza.change_name) {
-                    if(session) {
-                        name = stanza.change_name.name;
-                        user.rename(name);
-                        session.broadcast(JSON.stringify({name_changed: {
-                          id:   user.id,
-                          name: name,
-                        }}));
-                    } else {
-                        error("No session");
-                    }
-                // write operations from here on
-                } else if(rights > 0) {
+                        
+                        // TODO: move bubble into session?
+                        d = stanza.register
+                        
+                        // db-abstraction
+                        bubble = dbc.get_bubble(d.hash);
+                        
+                        // sending the tree
+                        bubble.get_tree(function(tree) {
+                            console.log("tree:");
+                            console.log(tree);
+                                
+                            if(tree) {
+                                for(var n = 0; n < tree.hashes.length; n++) {
+                                    if(tree.hashes[n] == d.hash) {
+                                        console.log("rights: " + n);
+                                        rights = n;
+                                    }
+                                }
+                                
+                                // send the info
+                                tree.hashes = tree.hashes.slice(0, rights + 1);
+                                client.send(JSON.stringify({node_data: {bubble: tree}}));
+                                
+                                if(rights > 0) {
+                                    bubble.create_user(d.name, d.color, function(res) {
+                                        user = res;
+                                        
+                                        // user/session management
+                                        session = session_manager.get(d.hash);
+                                        session.broadcast({registered: {name: d.name, color: d.color}})
+                                        session.add_client(client);
+                                    });
+                                }
+                            } else {
+                                // TODO: close connection?
+                                error("Unknown Hash");
+                            }
+                        });
+                    // create a bubble
+                    } else if(stanza.create_bubble) {
+                        dbc.create_bubble(stanza.create_bubble.name, function(bubble) {
+                            client.send(JSON.stringify({
+                                bubble_created: {hash: bubble.hash},
+                            }));
+                        });
+                    // change your color
+                    } else if(stanza.change_color) {
+                        if(session) {
+                            color = stanza.change_color.color;
+                            user.set_color(color);
+                            session.broadcast(JSON.stringify({color_changed:{
+                              id:    user.id,
+                              color: color
+                            }}));
+                        } else {
+                            error("No write permissions");
+                        }
+                    // change your name
+                    } else if(stanza.change_name) {
+                        if(session) {
+                            name = stanza.change_name.name;
+                            user.rename(name);
+                            session.broadcast(JSON.stringify({name_changed: {
+                              id:   user.id,
+                              name: name,
+                            }}));
+                        } else {
+                            error("No write permissions");
+                        }
                     // add a node
-                    if(stanza.add_node) {
+                    } else if(stanza.add_node) {
                         if(session) {
                             d = stanza.add_node;
                             bubble.add_node(d.to, d.content, user.id, function() {
@@ -182,7 +188,7 @@ db.connect(function(dbc) {
                                 }) );
                             });
                         } else {
-                            error("No session");
+                            error("No write permissions");
                         }
                     // move a node
                     } else if(stanza.move_node) {
@@ -198,7 +204,7 @@ db.connect(function(dbc) {
                                 }) );
                             });
                         } else {
-                            error("No session");
+                            error("No write permissions");
                         }
                     // delete a node
                     } else if(stanza.delete_node) {
@@ -212,7 +218,7 @@ db.connect(function(dbc) {
                                 }) );
                             });
                         } else {
-                            error("No session");
+                            error("No write permissions");
                         }
                     // edit a node
                     } else if(stanza.edit_content) {
@@ -228,13 +234,16 @@ db.connect(function(dbc) {
                                 }) );
                             });
                         } else {
-                            error("No session");
+                            error("No write permissions");
                         }
                     } else {
                         error("Unknown method");
                     }
-                } else {
-                    error("Not a read-only method");
+                }
+                catch(e)
+                {
+                    console.log("EXCEPION");
+                    console.log(e);
                 }
             });
         });
