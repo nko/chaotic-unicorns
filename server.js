@@ -156,6 +156,12 @@ db.connect(function(dbc) {
                     // create a bubble
                     } else if(stanza.create_bubble) {
                         d = stanza.create_bubble
+                        
+                        if(d.user_name.trim() === '' || d.bubble_name === '') {
+                            error("Invalid name");
+                            return;
+                        }
+                        
                         dbc.create_bubble(d.bubble_name, d.user_name, d.user_color, function(bubble) {
                             client.send(JSON.stringify({
                                 bubble_created: {hash: bubble.hash},
@@ -177,6 +183,12 @@ db.connect(function(dbc) {
                     } else if(stanza.change_name) {
                         if(session) {
                             name = stanza.change_name.name;
+                            
+                            if(name.trim() === '') {
+                                error("Invalid name");
+                                return;
+                            }
+                            
                             user.rename(name);
                             session.broadcast(JSON.stringify({name_changed: {
                               id:   user.id,
