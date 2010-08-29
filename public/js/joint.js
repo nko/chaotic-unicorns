@@ -1,10 +1,10 @@
 
 // spring vars
 
-var spring_length = 20;
-var spring_strength = 10;
-var spring_mass = 15;
-var spring_charge = 42;
+var spring_length = 0;
+var spring_strength = 5;
+var spring_mass = 2342;
+var spring_charge = 3;
 
 // helper
 
@@ -68,8 +68,8 @@ var updateCanvas = function () {
 
 // spring physics engine
 
-var updateSprings = function (_dt) {
-    var dt = parseFloat(_dt);
+var updateSprings = function (ms) {
+    var dt = ms/1000;
     var obj = $("#canvas");
     var offset = obj.offset();
     // get all springs
@@ -116,7 +116,7 @@ var updateSprings = function (_dt) {
                                 var atr = position_helper(offset, another);
                                 var diff = vsub(atr.position,src.position);
                                 var dir = vnorm(diff);
-                                var difflen = spring_length*200 - diff.x*diff.x - diff.y*diff.y; //vmag(diff)^2
+                                var difflen = spring_length - diff.x*diff.x - diff.y*diff.y; //vmag(diff)^2
                                 if(Math.abs(difflen) > 1e2)
                                   accel = vadd(accel,vmul(dir, (spring_charge*spring_charge)/-difflen));
                             }
