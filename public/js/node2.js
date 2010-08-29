@@ -1,4 +1,6 @@
 $(document).ready(function(){
+
+//do dodo
 var holder_min_height = 0;
 
 var initNode = function (_node) {
@@ -7,7 +9,7 @@ var initNode = function (_node) {
     var body = node.find(".body");
     var canvas = $("#canvas");
     node.css({left:canvas.offset().left + canvas.width() / 2, top:canvas.offset().top + canvas.height() / 2});
-    initSpring(node);
+    //node.css({left:canvas.width() / 2, top:canvas.height() / 2});
     node.hover(
         function () {$(this).addClass("fixed");},
         function () {$(this).removeClass("fixed");}
@@ -15,28 +17,38 @@ var initNode = function (_node) {
     holder_min_height = Math.max(holder_min_height, parseInt(holder.height()));
     var h = 10+holder.parent().find(".body").height();
     holder.width('20px');
-    holder.animate({width:'-=15px', height:h}, 500);
+    holder.animate({width:'-=15px', height:h}, 100, function () {$(this).find(".button").css("visibility","hidden");});
     holder.hover(
         function () {
             var h = Math.max(holder_min_height,10+parseInt($(this).parent().find(".body").height()));
-            $(this).animate({width:'+=15px', height:h}, 100, function () {
+            $(this).find(".button").css("visibility","visible");
+            $(this).animate({width:'+=15px', height:h}, 60, function () {
                 $(this).css("overflow","visible");
-            }).parent().animate({marginLeft:'-=15px',width:'+=15px'},100);},//handleIn
+            }).parent().animate({left:'-=15px',width:'+=16px'},50);},//handleIn
         function () {
             var h = 10+parseInt($(this).parent().find(".body").height());
             $(this).css("overflow","hidden");
-            $(this).animate({width:'-=15px', height:h}, 100).
-                parent().animate({marginLeft:'+=15px',width:'-=15px'},100);} //handleOut
+            $(this).animate({width:'-=15px', height:h}, 100, function () {
+                $(this).find(".button").css("visibility","hidden");
+            }).parent().animate({left:'+=15px',width:'-=16px'},50);} //handleOut
     );
-    node.css({height:Math.max(body.height(),holder_min_height)+3,
-               width:holder.width()+body.width()+3,
+    node.css({height:Math.max(body.height(),holder_min_height)+10,
+               width:holder.width()+body.width()+10,
                position:"absolute"
              });
 };
 
 $(".node").each(function (_, _node) {initNode(_node);});
-updateCanvas();
-setInterval("updateSprings(100)",100);
+//updateCanvas();
+setInterval("springsPhysics.generate().pre_render(100,10)",100);
+
+
+//cookies
+var initial_name  = $.cookie('name')
+var initial_color = $.cookie('color')
+
+if( !initial_name ){ initial_name = 'unknown' } // TODO overlay
+if( !initial_name ){ initial_color = 'black' }
 
 // helpers
   // firefox workaround
@@ -73,13 +85,23 @@ setInterval("updateSprings(100)",100);
     var current  = $('#' + id_for_html(id));
     current.fadeOut(90, function () {
       current.remove();
-      updateCanvas();
+      //updateCanvas();
     })
   }
 
 // draggable
-var draggable_options = {drag:updateCanvas}
+var draggable_options = {
+  //drag:updateCanvas
+}
+var droppable_options = {
+    drop: function(_, ui){
+      move_node(this.id, ui.draggable[0].id)
+	}
+}
 $(".draggable").draggable( draggable_options );
+$(".draggable").droppable( droppable_options );
+
+
 
 // init part 1
   // create socket
@@ -104,6 +126,7 @@ var register = function(name, color, hash){
 }
 
 var change_name = function(name){
+  $.cookie['name'] = name
   socket.send(json_plz({
     change_name: {
       'name': name
@@ -112,6 +135,7 @@ var change_name = function(name){
 }
 
 var change_color = function(color){
+  $.cookie['color'] = name
   socket.send(json_plz({
     change_color: {
       'color': color
@@ -126,12 +150,16 @@ draw_node = function(node, par_id){
     obj = $('#protonode').clone().
                   attr('id', html_id ).
                   addClass(id_for_html(par_id)).
+                  addClass('user_' + node.user).
                   //attr('relation', id_for_html(par_id)).
                   draggable(draggable_options).
+                  droppable( droppable_options ).
                   appendTo('#nodes').fadeIn(100);
+    obj.find('p').text( node.content || ' ' );
+    console.log($('#user_' + node.user).length)
+    $('.user_' + node.user).find('.holder').css('background', $('#user_' + node.user).css('color'));
     var par = $('#'+id_for_html(par_id));
     par.attr('relation',par.attr('relation')+','+html_id);
-    obj.find('p').text( node.content || ' ' );
     initNode(obj);
     if(node.subs) {
       $.each(node.subs, function(_,cur){
@@ -145,8 +173,20 @@ var draw_all_nodes =  function(node){
   $('#n_0_0').addClass("root");
 }
 
+var delete_with_children = function(current){
+    $.each(current.attr("relation").split(","),function (_,relation) {
+        if(relation != "") {
+            var target = $("#"+relation);
+            if(target.length) {
+               delete_with_children(target)
+               fade_and_remove( $(this)[0].id )
+            }
+        }
+    });
+}
 
 
+//...
 var add_node =  function(content, to){
   socket.send(json_plz({
     add_node: {
@@ -171,7 +211,7 @@ var delete_node = function(id){
   // changing properties
 var edit_content = function(id, content){
   var obj = $("#"+id);
-  obj.width(obj.find(".body").width()+3+obj.find(".holder").width());
+  obj.width(obj.find(".body").width()+10+obj.find(".holder").width());
   obj.height(obj.find(".body").height()+10);
   socket.send(json_plz({
     edit_content: {'id': id_for_json(id), 'content': content,}
@@ -206,11 +246,6 @@ $('#change_name_form').submit(function(){
   return false
 })
 
-/*
-$('#change_color').live('click',function(){
-  var color = 'blue' // ...
-  change_color(color)
-})*/
 
 $('.add_node').live('click', function(){
   var to_id   = id_for_json( get_node_id(this) )
@@ -218,14 +253,6 @@ $('.add_node').live('click', function(){
   add_node(content, to_id)
   return false
 })
-
-/*
-$('.node').funclivetion(){ //TODO jquery hook
-  var node_id = get_node_id(this)
-  var to_id   = // ...
-  move_node(node_id, content)
-})
-*/
 
 $('.delete_node').live('click', function(){
   var node_id = id_for_json( get_node_id(this) )
@@ -305,13 +332,14 @@ socket.on('message', function(msg) {
           $('#user_' + val.id).text( val.name )
         break;case 'color_changed':
           $('#user_' + val.id).css('color', val.color)
-          $('.user_' + val.id).css('border', '1px solid ' + val.color)
+          $('.user_' + val.id).find('.holder').css('background', val.color);//.css('border', '1px solid ' + val.color)
         break;case 'node_added':
-          draw_node({content: val.content, }, val.to)
+          draw_node(val, val.to)
         break;case 'node_moved':
           // .. 
         break;case 'node_deleted':
-          fade_and_remove( val.id )
+        console.log( $('#'+id_for_html).find('.node') )
+        delete_with_children( $('#'+id_for_html) );
         break;case 'position_changed':
           // .. 
         break;case 'content_edited':
@@ -327,12 +355,9 @@ socket.on('message', function(msg) {
   }
 });
 
-
 // init part 2
 socket.connect();
 
-var initial_name = 'chaot' // ...
-var initial_color = 'red' // ...
 register(initial_name, initial_color, location.pathname.slice(1)) // TODO hidden field
 
 $('#colorpicker').ColorPicker({
