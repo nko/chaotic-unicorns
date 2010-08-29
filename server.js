@@ -143,20 +143,28 @@ db.connect(function(dbc) {
                     });
                 // change your color
                 } else if(stanza.change_color) {
-                    color = stanza.change_color.color;
-                    user.set_color(color);
-                    session.broadcast(JSON.stringify({color_changed:{
-                      id:    user.id,
-                      color: color
-                    }}));
+                    if(session) {
+                        color = stanza.change_color.color;
+                        user.set_color(color);
+                        session.broadcast(JSON.stringify({color_changed:{
+                          id:    user.id,
+                          color: color
+                        }}));
+                    } else {
+                        error("No session");
+                    }
                 // change your name
                 } else if(stanza.change_name) {
-                    name = stanza.change_name.name;
-                    user.rename(name);
-                    session.broadcast(JSON.stringify({name_changed: {
-                      id:   user.id,
-                      name: name,
-                    }}));
+                    if(session) {
+                        name = stanza.change_name.name;
+                        user.rename(name);
+                        session.broadcast(JSON.stringify({name_changed: {
+                          id:   user.id,
+                          name: name,
+                        }}));
+                    } else {
+                        error("No session");
+                    }
                 // write operations from here on
                 } else if(rights > 0) {
                     // add a node
