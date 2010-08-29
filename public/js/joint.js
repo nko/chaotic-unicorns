@@ -10,9 +10,10 @@ var vsub = function (a,b) {return {x:a.x-b.x, y:a.y-b.y};};
 
 // spring vars
 
-var spring_length = 100;
-var spring_strength = 30;
-var spring_mass = 50;
+var spring_length = 140;
+var spring_strength = 100;
+var spring_mass = 150;
+var spring_charge = 235;
 
 // canvas
 
@@ -53,7 +54,7 @@ var updateCanvas = function () {
     g.closePath();
 };
 
-var initSprings = function () {$(".node").attr('speed',"0,0");};
+var initSpring = function (_node) {$(_node).attr('speed',"0,0");};
 
 var updateSprings = function (_dt) {
     var dt = parseFloat(_dt);
@@ -119,7 +120,7 @@ var updateSprings = function (_dt) {
     g.beginPath();
     $.each(accelerations, function (_, node) {
         var current = node.current;
-        if(!current.hasClass("root")) {
+        if(!current.hasClass("root") && !current.hasClass("fixed")) {
             // some speed calc
             var speed = current.attr('speed').split(",");
             speed = {x: parseFloat(speed[0]), y: parseFloat(speed[1])};
@@ -134,6 +135,10 @@ var updateSprings = function (_dt) {
             current.animate({left:pos.x, top:pos.y},dt);
             // applying speed
             current.attr('speed', speed.x+","+speed.y);
+        } else if(current.hasClass("fixed")) {
+             // drawing ...
+            g.moveTo(node.other.x, node.other.y);
+            g.lineTo(node.position.x, node.position.y);
         }
     });
     g.stroke();

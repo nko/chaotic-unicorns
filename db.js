@@ -119,7 +119,7 @@ exports.connect = function(cb) {
             }
             
             // TODO: db-interaction at creation
-            bubble.create_user = function(name, color) {
+            bubble.create_user = function(name, color, cb) {
                 var user = {name: name, color: color};
                 
                 user.rename = function(name, cb) {
@@ -146,19 +146,55 @@ exports.connect = function(cb) {
                     );
                 }
                 
-                return user;
+                findOne({'users.name': name}, {'_id': 1}, function(res) {
+                    if(res) {
+                        console.log('updating user ...');
+                        update({'users.name': name}, {'$set': {'users.$.color': color}}, function(res) {
+                            cb(user);
+                        });
+                    } else {
+                        console.log('creating user ...')
+                        update({}, {'$push': {'users': {name: name, color: color}}}, function() {
+                            cb(user);
+                        })
+                    }
+                });
             }
-                
-            bubble.add_node = function(position, content, cb) {
-                var node = create_node(content);
+            
+            bubble.edit_node = function(position, content, cb) {
+                var adress = "subs." + position.join('.subs.') + ".content";
+                var diff = {};
+                diff[adress] = content;
+                update({}, {'$set': diff}, cb);
+            }
+            
+            var add_node = bubble.add_node = function(position, content, cb) {
                 var adress = "subs." + position.join('.subs.') + ".subs";
-                
-                console.log(node)
-                console.log(adress)
-                
-                diff = {};
-                diff[adress] = node;
+                var diff = {};
+                diff[adress] = create_node(content);
                 update({}, {'$push': diff}, cb);
+            }
+            
+            var del_node = bubble.del_node = function(position, cb) {
+                var adress = "subs." + position.join('.subs.');
+                var diff = {};
+                diff[adress] = create_node(content);
+                update({}, {'$unset': diff}, cb);
+            }
+            
+            bubble.move_node = function(from, to, cb) {
+                // TODO: untetested and not even close to atomic
+                var adress = "subs." + position.join('.subs.');
+                var filter = {};
+                filter[adress] = 1;
+                
+                findOne({}, filter, function(res) {
+                    del_node(from, function() {
+                        add_node(to, res, function() {
+                            cb(res);
+                        });
+                    });
+                });
             }
             
             /*
