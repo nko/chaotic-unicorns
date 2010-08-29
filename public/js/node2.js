@@ -1,4 +1,5 @@
 $(document).ready(function(){
+var holder_min_height = 0;
 
 var initNode = function (_node) {
     var node = $(_node);
@@ -11,22 +12,28 @@ var initNode = function (_node) {
         function () {$(this).addClass("fixed");},
         function () {$(this).removeClass("fixed");}
     );
-    var h = holder.height();//var h = holder.parent().find(".body").height();
+    holder_min_height = Math.max(holder_min_height, parseInt(holder.height()));
+    var h = 10+holder.parent().find(".body").height();
     holder.width('20px');
-    holder.animate({width:'-=15px', height:h+"px"}, 500);
+    holder.animate({width:'-=15px', height:h}, 500);
     holder.hover(
-        function () {$(this).animate({width:'+=15px'}, 100, function () {
-            $(this).css("overflow","visible");
-        }).parent().animate({marginLeft:'-=15px',width:'+=15px'},100);},//handleIn
         function () {
+            var h = Math.max(holder_min_height,10+parseInt($(this).parent().find(".body").height()));
+            $(this).animate({width:'+=15px', height:h}, 100, function () {
+                $(this).css("overflow","visible");
+            }).parent().animate({marginLeft:'-=15px',width:'+=15px'},100);},//handleIn
+        function () {
+            var h = 10+parseInt($(this).parent().find(".body").height());
             $(this).css("overflow","hidden");
-            $(this).animate({width:'-=15px'}, 100).parent().animate({marginLeft:'+=15px',width:'-=15px'},100);} //handleOut
+            $(this).animate({width:'-=15px', height:h}, 100).
+                parent().animate({marginLeft:'+=15px',width:'-=15px'},100);} //handleOut
     );
     node.css({height:Math.max(body.height(),holder.height())+5,
                width:holder.width()+body.width()+5,
                position:"absolute"
              });
 };
+
 $(".node").each(function (_, _node) {initNode(_node);});
 updateCanvas();
 setInterval("updateSprings(1/100)",100);
@@ -63,7 +70,7 @@ setInterval("updateSprings(1/100)",100);
   
   // visual
   var fade_and_remove = function(id) {
-    var current  = $('#' + id);
+    var current  = $('#' + id_for_html(id));
     current.fadeOut(90, function () {
       current.remove();
       updateCanvas();
@@ -108,24 +115,26 @@ var change_color = function(color){
   }) )
 }
 
-  // changing tree structure
-  draw_node = function(node, par_id){
-  console.log(node, par_id)
+// changing tree structure
+draw_node = function(node, par_id){
+    console.log(node, par_id)
     var html_id = id_for_html(par_id) + '_' + ($('.'+ id_for_html(par_id)).length )
     obj = $('#protonode').clone().
                   attr('id', html_id ).
                   addClass(id_for_html(par_id)).
-                  attr('relation', id_for_html(par_id)).
+                  //attr('relation', id_for_html(par_id)).
                   draggable(draggable_options).
                   appendTo('#nodes').fadeIn(100);
-    initNode(obj)
+    initNode(obj);
+    var par = $('#'+id_for_html(par_id));
+    par.attr('relation',par.attr('relation')+','+html_id);
     obj.find('p').text( node.content || ' ' );
     if(node.subs) {
       $.each(node.subs, function(_,cur){
         draw_node(cur, id_for_json(html_id) )
       });
     }
-  }
+}
 
 var draw_all_nodes =  function(node){
   draw_node(node.subs[0].subs[0], [0]);
@@ -157,6 +166,9 @@ var delete_node = function(id){
 
   // changing properties
 var edit_content = function(id, content){
+  var obj = $("#"+id);
+  obj.width(obj.find(".body").width()+10+obj.find(".holder").width());
+  obj.height(obj.find(".body").height()+5);
   socket.send(json_plz({
     edit_content: {'id': id_for_json(id), 'content': content,}
   }) )
@@ -205,7 +217,7 @@ $('.node').funclivetion(){ //TODO jquery hook
 */
 
 $('.delete_node').live('click', function(){
-  var node_id = get_node_id(this)
+  var node_id = id_for_json( get_node_id(this) )
   delete_node(node_id)
   return false
 })
@@ -286,7 +298,7 @@ socket.on('message', function(msg) {
         break;case 'position_changed':
           // .. 
         break;case 'content_edited':
-          
+        
           // .. 
         break;case 'bubble_created':
           location.href = '/' + val.hash
