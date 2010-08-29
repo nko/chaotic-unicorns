@@ -2,55 +2,78 @@ $(document).ready(function(){
 
 //do dodo
 var holder_min_height = 0;
+var springs_physics = springsPhysics.generate()
+    springs_physics.static();
 
 var initNode = function (_node) {
     var node = $(_node);
     var holder = node.find(".holder");
     var body = node.find(".body");
     var canvas = $("#canvas");
-    node.css({left:canvas.offset().left + canvas.width() / 2, top:canvas.offset().top + canvas.height() / 2});
+    var left, top;
+    
+    // nice initial position
+    var par = $('#'+node[0].id.slice(0, -2));
+    if(par && par.length) {
+        childs = $('.'+node[0].id.slice(0, -2)).length;
+        a = childs % 4;
+        left = par.offset().left + (childs%2) + 1/(a+1) - 1.5;
+        top = par.offset().top + (childs/2)%2 - 0.5;
+    } else {
+        left = canvas.offset().left + canvas.width() / 2;
+        top = canvas.offset().top + canvas.height() / 2;
+    }
+    
+    /*
+    left = canvas.offset().left + canvas.width() / 2;
+    top = canvas.offset().top + canvas.height() / 2;
+    */
+    
+    node.css({left: left, top: top});
     //node.css({left:canvas.width() / 2, top:canvas.height() / 2});
     node.hover(
         function () {$(this).addClass("fixed");},
         function () {$(this).removeClass("fixed");}
     );
     holder_min_height = Math.max(holder_min_height, parseInt(holder.height()));
-    var h = 10+holder.parent().find(".body").height();
+    var h = 13+parseInt(holder.parent().find(".body").height());
     holder.width('20px');
-    holder.animate({width:'-=15px', height:h}, 100, function () {$(this).find(".button").css("visibility","hidden");});
+    holder.animate({width:'-=15px', height:h}, 100, function () {
+        $(this).find(".button").css("visibility","hidden");
+    }).parent().animate({height:h},100);
     holder.hover(
         function () {
-            var h = Math.max(holder_min_height,10+parseInt($(this).parent().find(".body").height()));
+            var h = Math.max(holder_min_height,13+parseInt($(this).parent().find(".body").height()));
             $(this).find(".button").css("visibility","visible");
             $(this).animate({width:'+=15px', height:h}, 50, function () {
                 $(this).css("overflow","visible");
-            }).parent().animate({left:'-=15px',width:'+=16px'},50);},//handleIn
+            }).parent().animate({left:'-=15px',width:'+=16px',height:h},50);},//handleIn
         function () {
-            var h = 10+parseInt($(this).parent().find(".body").height());
+            var h = 13+parseInt($(this).parent().find(".body").height());
             $(this).css("overflow","hidden");
             $(this).animate({width:'-=15px', height:h}, 50, function () {
                 $(this).find(".button").css("visibility","hidden");
-            }).parent().animate({left:'+=15px',width:'-=16px'},50);} //handleOut
+            }).parent().animate({left:'+=15px',width:'-=20px',height:h},50);} //handleOut
     );
-    node.css({height:Math.max(body.height(),holder_min_height)+10,
-               width:holder.width()+body.width()+10,
+    node.css({height:Math.max(body.height(),holder_min_height)+1,
+               width:holder.width()+body.width()+23,
                position:"absolute"
              });
 };
 
 $(".node").each(function (_, _node) {initNode(_node);});
-//updateCanvas();
-setTimeout("springsPhysics.generate().pre_render(10,23)",3000);
+//setTimeout("springsPhysics.generate().pre_render(10,23)",3000);
 //setInterval("springsPhysics.generate().pre_render(100,23)",100);
-setInterval("springsPhysics.generate().static()",20);
+//setInterval("springs_physics.static()",42);
 
 
 //cookies
 var initial_name  = $.cookie('name')
 var initial_color = $.cookie('color')
-
 if( !initial_name ){ initial_name = 'unknown' } // TODO overlay
 if( !initial_name ){ initial_color = 'black' }
+
+$('#change_name').val( initial_name )
 
 // helpers
   // firefox workaround
@@ -77,6 +100,23 @@ if( !initial_name ){ initial_color = 'black' }
     return a
   }
   
+  // overlayss
+  var error_msg = function(text){
+    if(!text){
+      text = '!!!'
+    }
+    $('#error').text( 'Error: ' + text )
+    $( "#error" ).dialog(
+    {
+//        modal:true,
+        'position': [3,3],
+        buttons:
+        {
+          "Ok": function() { $(this).dialog("close"); },
+        }
+     });
+   //$( "#error" ).dialog( "option", "buttons" );
+  }
   // triggers
   var get_node_id = function(ele){
     return $(ele).parents('.node')[0].id  
@@ -93,8 +133,14 @@ if( !initial_name ){ initial_color = 'black' }
 
 // draggable
 var draggable_options = {
-    stop: function () { springsPhysics.generate().pre_render(10,23,2000); }
-  //drag:updateCanvas
+    stop: function () {
+        springs_physics.update($(this)[0].id);
+        springs_physics.pre_render(10,42,500);
+    },
+    drag: function () {
+        springs_physics.update($(this)[0].id);
+        springs_physics.static();
+    }
 }
 var droppable_options = {
     drop: function(_, ui){
@@ -103,7 +149,9 @@ var droppable_options = {
 }
 $(".draggable").draggable( draggable_options );
 $(".draggable").droppable( droppable_options );
-
+$(window).resize(function () {
+    springs_physics.static();
+});
 
 
 // init part 1
@@ -129,7 +177,7 @@ var register = function(name, color, hash){
 }
 
 var change_name = function(name){
-  $.cookie['name'] = name
+  $.cookie('name', name)
   socket.send(json_plz({
     change_name: {
       'name': name
@@ -138,7 +186,7 @@ var change_name = function(name){
 }
 
 var change_color = function(color){
-  $.cookie['color'] = name
+  $.cookie('color', color)
   socket.send(json_plz({
     change_color: {
       'color': color
@@ -159,11 +207,13 @@ draw_node = function(node, par_id){
                   droppable( droppable_options ).
                   appendTo('#nodes').fadeIn(100);
     obj.find('p').text( node.content || ' ' );
-    console.log($('#user_' + node.user).length)
+    console.log( $('#user_' + node.user).length )
     $('.user_' + node.user).find('.holder').css('background', $('#user_' + node.user).css('color'));
     var par = $('#'+id_for_html(par_id));
     par.attr('relation',par.attr('relation')+','+html_id);
-    initNode(obj);
+    initNode(obj, par);
+    springs_physics.add(html_id, id_for_html(par_id));
+    springs_physics.static();
     if(node.subs) {
       $.each(node.subs, function(_,cur){
         draw_node(cur, id_for_json(html_id) )
@@ -172,11 +222,14 @@ draw_node = function(node, par_id){
 }
 
 var draw_all_nodes =  function(node){
-  draw_node(node.subs[0].subs[0], [0]);
-  $('#n_0_0').addClass("root");
+    draw_node(node.subs[0].subs[0], [0]);
+    $('#n_0_0').addClass("root");
+    springs_physics.pre_render(20,100,1000);
 }
 
 var delete_with_children = function(current){
+console.log('DEL')
+console.log(current)
     $.each(current.attr("relation").split(","),function (_,relation) {
         if(relation != "") {
             var target = $("#"+relation);
@@ -213,9 +266,6 @@ var delete_node = function(id){
 
   // changing properties
 var edit_content = function(id, content){
-  var obj = $("#"+id);
-  obj.width(obj.find(".body").width()+10+obj.find(".holder").width());
-  obj.height(obj.find(".body").height()+10);
   socket.send(json_plz({
     edit_content: {'id': id_for_json(id), 'content': content,}
   }) )
@@ -229,9 +279,13 @@ var change_position = function(id, $DODO){
 
 // bubble management
 
-var create_bubble = function(name){
+var create_bubble = function(bubble_name, name, color){
   socket.send(json_plz({
-    create_bubble: {'name': name,}
+    create_bubble: {
+      'bubble_name': bubble_name,
+      'user_name': name,
+      'user_color': color,
+    }
   }) )
 }
 
@@ -245,7 +299,6 @@ $('#change_name_form').submit(function(){
   var name = $(this).find('input[type=text]').val()
   var color = $(this).find('#colorpicker div').css('backgroundColor')
   change_name(name)
-  change_color(color)
   return false
 })
 
@@ -279,7 +332,7 @@ $('.node').function(){ //TODO jquery hook
 
 $('#create_bubble_form').submit(function(){
   var name = $(this).find('input[type=text]').val();
-  create_bubble(name)
+  create_bubble(name,  $.cookie('name'),  $.cookie('color'))
   return false
 })
 
@@ -317,16 +370,36 @@ socket.on('message', function(msg) {
   for ( prop in  msg){
     if (typeof msg[prop] !== 'function'){ // enum only props
       val = msg[prop]
+
       switch(prop){
         case 'debug':
           console.log('_debug: ' + val.msg)
-        break;case 'error':
-          console.log('ERROR: ' + val.msg)
+        break;case 'err':
+          error_msg(val.msg)
         break;case 'registered':
-          append_user(val.id, val)
+          append_user(val.id, val) 
         break;case 'left':
           fade_and_remove( $('#user_' + val.id) )
         break;case 'node_data':
+          $('#bubble').text( val.bubble.content )
+          // build hash string
+          console.log(val.bubble)
+                    console.log(val.bubble.hashes.length)
+          
+          if( val.bubble.hasOwnProperty('hashes') ){
+              hash_string = ''
+              if( val.bubble.hashes.length == 3 ){
+                hash_string = hash_string.concat( '<a href="' + location.host + '/' + val.bubble.hashes[0] + '">admin version</a>' )
+              }
+              
+              if( val.bubble.hashes.length >= 2 ){
+                hash_string = hash_string.concat( '<a href="' + location.host + '/' + (val.bubble.hashes[val.bubble.hashes.length - 2]) + '">read-only version</a>')
+              }
+              hash_string = hash_string.concat( '<a href="' + location.host + '/' + val.bubble.hashes[val.bubble.hashes.length - 1] + '">read-only version</a>')
+          }
+          console.log('hs' + hash_string)
+          $('#hashes').html( hash_string )
+          // draw
           draw_all_nodes(val.bubble)
           for (cur in val.bubble.users){
             append_user(cur, val.bubble.users[cur])
@@ -342,14 +415,16 @@ socket.on('message', function(msg) {
           // .. 
         break;case 'node_deleted':
         console.log( $('#'+id_for_html).find('.node') )
+        springs_physics.remove(id_for_html);
+//        clog($('#'+id_for_html))
         delete_with_children( $('#'+id_for_html) );
         break;case 'position_changed':
           // .. 
         break;case 'content_edited':
           $('#' + id_for_html(val.id) + ' p').text(val.content);
           var obj = $("#"+id_for_html(val.id));
-          obj.width(obj.find(".body").width()+10+obj.find(".holder").width());
-          obj.height(obj.find(".body").height()+10);
+          obj.width(obj.find(".body").width()+23+obj.find(".holder").width());
+          obj.height(obj.find(".body").height()+13);
           // .. 
         break;case 'bubble_created':
           location.href = '/' + val.hash
@@ -364,21 +439,34 @@ socket.on('message', function(msg) {
 // init part 2
 socket.connect();
 
-register(initial_name, initial_color, location.pathname.slice(1)) // TODO hidden field
+register(initial_name, initial_color, location.pathname.slice(1))
+//set_color(initial_color) // be lazy, don't solve bugs ;)
+/*
+var submit_color = function(colpkr){
+  $(colpkr).fadeOut(500);
+  $('#colorpicker div').css('backgroundColor', '#' + hex);
+  return false
+}*/
 
 $('#colorpicker').ColorPicker({
-	color: '#0000ff',
+	color: '#000000',
 	onShow: function (colpkr) {
 		$(colpkr).fadeIn(500);
 		return false;
 	},
-	onHide: function (colpkr) {
-		$(colpkr).fadeOut(500);
-		return false;
-	},
-	onChange: function (hsb, hex, rgb) {
-		$('#colorpicker div').css('backgroundColor', '#' + hex);
-	}
+//	onChange: function (hsb, hex, rgb) {
+//		$('#colorpicker div').css('backgroundColor', '#' + hex);
+//	},
+	onHide: function(colpkr){
+      $(colpkr).fadeOut(500);
+      return false
+    },
+	onSubmit: function(colpkr, hex){
+      $('#colorpicker').css('backgroundColor', '#' + hex);
+      change_color('#' + hex)
+      $(colpkr).fadeOut(500);
+      return false
+    }
 })
 
 // close (document ready)

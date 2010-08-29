@@ -4,11 +4,11 @@ var springsPhysics = function () {
     // defaults
 
     var _default = {
-            length:   100,
-            strength: 500,
-            mass:     342,
-            charge:   800,
-            friction: 0.9,
+            length:   80,   // 100
+            strength: 500,  // 500
+            mass:     342,  // 342
+            charge:   800,  // 800
+            friction: 0.9,  // 0.9
         };
 
     // helper
@@ -57,12 +57,12 @@ var springsPhysics = function () {
             animate(engine, ani);
             return draw(engine);
         };
-        var add = function (nodeid) {return add_node(engine,nodeid);};
+        var add = function (nodeid,parid) {return add_node(engine,nodeid,parid);};
         var update = function (nodeid) {return update_node(engine,nodeid);};
         var remove = function (nodeid) {return remove_node(engine,nodeid);};
         var static = function () {return draw(engine);};
         return {realtime:realtime, step:step, pre_render:pre_render,
-                static:static};
+                static:static, add:add, update:update, remove:remove};
     };
 
     // body ---
@@ -164,8 +164,10 @@ var springsPhysics = function () {
         g.clearRect(0, 0, canvas.width, canvas.height);
         g.beginPath();
         $.each(engine.joints, function (_, joint) {
-            var src = vsub(joint.source.position,{x:0,y:joint.source.middle.y/2});//??
-            var trg = vsub(joint.target.position,{x:0,y:joint.target.middle.y/2});//??
+            var src = joint.source.position;
+            var trg = joint.target.position;
+            //var src = vsub(joint.source.position,{x:0,y:joint.source.middle.y/2});//??
+            //var trg = vsub(joint.target.position,{x:0,y:joint.target.middle.y/2});//??
              // drawing ...
             g.moveTo(src.x, src.y);
             g.lineTo(trg.x, trg.y);
@@ -177,8 +179,11 @@ var springsPhysics = function () {
     
     var animate = system.animate = function (engine, dt) {
         $.each(engine.nodes, function (_, node) {
+            var id = setInterval(function () {draw(engine);},20);
             var pos = vsub(node.position, node.middle);
-            node.object.animate({left:pos.x, top:pos.y}, dt);
+            node.object.animate({left:pos.x, top:pos.y}, dt, function () {
+                clearInterval(id);
+            });
         });
         return engine;
     };
@@ -189,19 +194,19 @@ var springsPhysics = function () {
             var node = engine.nodes[nodeid];
             var composition = _position_helper(window.offset(), node.object);
             node.position = composition.position;
-            node.middle = composition.offset;
-            node.offset = composition.middle;
+            node.middle = composition.middle;
+            node.offset = composition.offset;
             node.size = composition.size;
         }
         return engine;
     };
 
-    var add_node = system.add_node = function (engine, nodeid) {
+    var add_node = system.add_node = function (engine, nodeid, parid) {
         var window = $("#nodes");
-        var current = $(nodeid);
+        var current = $("#"+nodeid);
         var composition = _position_helper(window.offset(), current);
-        engine.nodes[current[0].id] = cur_node = {
-                id: current[0].id,
+        engine.nodes[nodeid] = cur_node = {
+                id: nodeid,
                 object: current,
                 position: composition.position,
                 middle: composition.middle,
@@ -218,7 +223,7 @@ var springsPhysics = function () {
             if(relation != "") {
                 var target = $("#"+relation);
                 if(target.length) {
-                    engine.nodes[cur_node.id].joints[target[0].id] =
+                    engine.nodes[nodeid].joints[target[0].id] =
                         engine.joints.push({
                             source: cur_node,
                             target: engine.nodes[target[0].id], // error source
@@ -228,7 +233,8 @@ var springsPhysics = function () {
                 }
             }
         });
-        return engine;
+        if(parid == "n_0") return engine; // all root objects
+        return add_joint_to_node(engine, nodeid, parid);
     };
 
     var remove_node = system.remove_node = function (engine, nodeid) {
@@ -238,6 +244,20 @@ var springsPhysics = function () {
                 engine.joints.index(joint);
             });
             delete engine.nodes[nodeid];
+        }
+        return engine;
+    };
+
+    var add_joint_to_node = system.add_joint_to_node = function (engine, nodeid, parid) {
+        if((parid in engine.nodes) && (nodeid in engine.nodes)) {
+            var par = engine.nodes[parid];
+            var node = engine.nodes[nodeid];
+            par.joints[node.id] = engine.joints.push({
+                    source: par,
+                    target: node,
+                    length: engine.params.length,
+                    strength: engine.params.strength,
+                });
         }
         return engine;
     };

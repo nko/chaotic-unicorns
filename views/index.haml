@@ -1,28 +1,29 @@
 #title_bar
-  #title= title
-  some bla bal
+  #title
+    <h1 id='bubble'>Node<sup>❷</sup></h1> <h2 id='hashes'>(hashs)</h2>
+    %a.delete_node.button{href: "#", id: 'delete_bubble'}
+      .tooltip
+        .bubble
+          .arrow
+          burst bubble
 
 #tool_bar
-  .button
-    tool1
-  .button tool2
-  .button tool3
+  %em
+    editing:
+  %form{id: 'change_name_form' }
+    %div#colorpicker
+    %input{type: 'text',   name: 'name', id: 'change_name'}
+    %input{type: 'submit', value: 'update'}
+  %ul#user_list
 
 = partial('node', [{text:" _", id: "protonode", rel:''}])
 #nodes.fullscreen
   %canvas#canvas.fullscreen
 
 
-%form{id: 'change_name_form' ,style: 'position:fixed;bottom:0px;right:0px;z-index:9999'}
-  %input{type: 'text',   name: 'name'}
-  %input{type: 'hidden', name: 'color'}
-  %input{type: 'submit', value: 'change name'}
-  %div#colorpicker
-    %div{style:"background-color: #0000ff"}
-       .
   
-%form{id: 'create_bubble_form' ,style: 'position:fixed;bottom:0px;left:0px;z-index:9999'}
+%form{id: 'create_bubble_form' ,style: 'position:fixed;top:0px;right:0px;z-index:9999'}
   %input{type: 'text', name: 'name'}
   %input{type: 'submit', value: 'create bubble'}
 
-%ul#user_list
+#error

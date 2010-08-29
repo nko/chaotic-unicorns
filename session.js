@@ -20,6 +20,7 @@ exports.session_manager = function() {
                 // represents an ongoing bubble session
                 var session = {
                     participants: {},
+                    alive: true,
                 };
                 
                 var orphaned = function() {
@@ -47,7 +48,7 @@ exports.session_manager = function() {
                     }
                 }
                 
-                session.broadcast = function(msg) {
+                var broadcast = session.broadcast = function(msg) {
                     var participants = session.participants;
                     
                     for(attr in participants) {
@@ -55,6 +56,13 @@ exports.session_manager = function() {
                             participants[attr].send(msg);
                         }
                     }
+                }
+                
+                session.destroy = function() {
+                    broadcast(JSON.stringify({destroy: true}));
+                    session.alive = false;
+                    console.log("getting attacked by aliens");
+                    console.log(new Error().stack)
                 }
                 
                 return session;
