@@ -22,13 +22,13 @@ var initNode = function (_node) {
         function () {
             var h = Math.max(holder_min_height,10+parseInt($(this).parent().find(".body").height()));
             $(this).find(".button").css("visibility","visible");
-            $(this).animate({width:'+=15px', height:h}, 60, function () {
+            $(this).animate({width:'+=15px', height:h}, 50, function () {
                 $(this).css("overflow","visible");
             }).parent().animate({left:'-=15px',width:'+=16px'},50);},//handleIn
         function () {
             var h = 10+parseInt($(this).parent().find(".body").height());
             $(this).css("overflow","hidden");
-            $(this).animate({width:'-=15px', height:h}, 100, function () {
+            $(this).animate({width:'-=15px', height:h}, 50, function () {
                 $(this).find(".button").css("visibility","hidden");
             }).parent().animate({left:'+=15px',width:'-=16px'},50);} //handleOut
     );
@@ -40,7 +40,9 @@ var initNode = function (_node) {
 
 $(".node").each(function (_, _node) {initNode(_node);});
 //updateCanvas();
-setInterval("springsPhysics.generate().pre_render(100,10)",100);
+//setTimeout("springsPhysics.generate().pre_render(10,23)",3000);
+//setInterval("springsPhysics.generate().pre_render(100,23)",100);
+setInterval("springsPhysics.generate().static()",20);
 
 
 //cookies
@@ -91,6 +93,7 @@ if( !initial_name ){ initial_color = 'black' }
 
 // draggable
 var draggable_options = {
+    stop: function () { springsPhysics.generate().pre_render(10,23,1000); }
   //drag:updateCanvas
 }
 var droppable_options = {
@@ -156,7 +159,7 @@ draw_node = function(node, par_id){
                   droppable( droppable_options ).
                   appendTo('#nodes').fadeIn(100);
     obj.find('p').text( node.content || ' ' );
-    console.log($('#user_' + node.user).length)
+    console.log( $('#user_' + node.user).length )
     $('.user_' + node.user).find('.holder').css('background', $('#user_' + node.user).css('color'));
     var par = $('#'+id_for_html(par_id));
     par.attr('relation',par.attr('relation')+','+html_id);
@@ -242,7 +245,6 @@ $('#change_name_form').submit(function(){
   var name = $(this).find('input[type=text]').val()
   var color = $(this).find('#colorpicker div').css('backgroundColor')
   change_name(name)
-  change_color(color)
   return false
 })
 
@@ -359,6 +361,12 @@ socket.on('message', function(msg) {
 socket.connect();
 
 register(initial_name, initial_color, location.pathname.slice(1)) // TODO hidden field
+/*
+var submit_color = function(colpkr){
+  $(colpkr).fadeOut(500);
+  $('#colorpicker div').css('backgroundColor', '#' + hex);
+  return false
+}*/
 
 $('#colorpicker').ColorPicker({
 	color: '#0000ff',
@@ -366,13 +374,19 @@ $('#colorpicker').ColorPicker({
 		$(colpkr).fadeIn(500);
 		return false;
 	},
-	onHide: function (colpkr) {
-		$(colpkr).fadeOut(500);
-		return false;
-	},
-	onChange: function (hsb, hex, rgb) {
-		$('#colorpicker div').css('backgroundColor', '#' + hex);
-	}
+//	onChange: function (hsb, hex, rgb) {
+//		$('#colorpicker div').css('backgroundColor', '#' + hex);
+//	},
+	onHide: function(colpkr){
+      $(colpkr).fadeOut(500);
+      return false
+    },
+	onSubmit: function(colpkr, hex){
+      $('#colorpicker div').css('backgroundColor', '#' + hex);
+      change_color('#' + hex)
+      $(colpkr).fadeOut(500);
+      return false
+    }
 })
 
 // close (document ready)
