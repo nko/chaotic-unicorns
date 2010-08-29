@@ -44,7 +44,11 @@ setInterval("updateSprings(1/100)",100);
   }
   
   var id_for_json = function(obj){
-    return $.each( obj.slice(2).split('_'), function(_,ele){ return parseInt(ele) })
+    a = []
+    $.each(obj.slice(2).split('_'), function(cur,ele){
+    a[cur]=parseInt(ele)
+    })
+    return a
   }
   
   // triggers
@@ -109,9 +113,9 @@ var change_color = function(color){
                   attr('relation', id_for_html(par_id)).
                   draggable(draggable_options).
                   appendTo('#nodes').fadeIn(100);
-    initNode(obj);
-    obj.find("p").html("new");
-    if(node.subs){
+    initNode(obj)
+    obj.find('p').text( node.content || ' ' );
+    if(node.subs) {
       $.each(node.subs, function(_,cur){
         draw_node(cur, id_for_json(html_id) )
       });
@@ -119,9 +123,8 @@ var change_color = function(color){
   }
 
 var draw_all_nodes =  function(node){
-  console.log('z', node )
   draw_node(node.subs[0].subs[0], [0]);
-  $('#n_0_0').addClass("root").find("p").html("root");
+  $('#n_0_0').addClass("root");
 }
 
 
@@ -150,7 +153,7 @@ var delete_node = function(id){
   // changing properties
 var edit_content = function(id, content){
   socket.send(json_plz({
-    edit_content: {'id': id, 'content': content,}
+    edit_content: {'id': id_for_json(id), 'content': content,}
   }) )
 }
 
@@ -182,8 +185,9 @@ $('#change_color').live('click',function(){
 })
 
 $('.add_node').live('click', function(){
-  var to_id = id_for_json( get_node_id(this) )
-  add_node('', to_id)
+  var to_id   = id_for_json( get_node_id(this) )
+  var content = $(this).parent().find('p').text()
+  add_node(content, to_id)
   return false
 })
 
@@ -229,8 +233,8 @@ $('.node p').live('dblclick', function(){
 })
 
 var inplace_submit_and_restore_p = function(ele){
+  edit_content( get_node_id(ele), $(ele).val() )
   $(ele).replaceWith('<p>' + $(ele).val() + '</p>')
-  edit_content( get_node_id(this), $(ele).val() )
 }
 $("input.in-place-edit").live('keypress', function (e) {
   if( e.which == 13 ){
@@ -269,7 +273,7 @@ socket.on('message', function(msg) {
         break;case 'color_changed':
           // .. 
         break;case 'node_added':
-          draw_node({content: '', }, val.to)
+          draw_node({content: val.content, }, val.to)
         break;case 'node_moved':
           // .. 
         break;case 'node_deleted':
@@ -277,6 +281,7 @@ socket.on('message', function(msg) {
         break;case 'position_changed':
           // .. 
         break;case 'content_edited':
+          
           // .. 
         break;case 'bubble_created':
           location.href = '/' + val.hash
@@ -295,6 +300,8 @@ socket.connect();
 var initial_name = 'chaot' // ...
 var initial_color = 'red' // ...
 register(initial_name, initial_color, location.pathname.slice(1)) // TODO hidden field
+
+//$('#colorpicker').ColorPicker()
 
 // close (document ready)
 });
