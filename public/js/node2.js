@@ -28,15 +28,15 @@ var initNode = function (_node) {
             $(this).animate({width:'-=15px', height:h}, 100).
                 parent().animate({marginLeft:'+=15px',width:'-=15px'},100);} //handleOut
     );
-    node.css({height:Math.max(body.height(),holder.height())+5,
-               width:holder.width()+body.width()+5,
+    node.css({height:Math.max(body.height(),holder_min_height)+3,
+               width:holder.width()+body.width()+3,
                position:"absolute"
              });
 };
 
 $(".node").each(function (_, _node) {initNode(_node);});
 updateCanvas();
-setInterval("updateSprings(1/100)",100);
+setInterval("updateSprings(100)",100);
 
 // helpers
   // firefox workaround
@@ -58,7 +58,7 @@ setInterval("updateSprings(1/100)",100);
   var id_for_json = function(obj){
     a = []
     $.each(obj.slice(2).split('_'), function(cur,ele){
-    a[cur]=parseInt(ele)
+      a[cur]=parseInt(ele)
     })
     return a
   }
@@ -105,13 +105,17 @@ var register = function(name, color, hash){
 
 var change_name = function(name){
   socket.send(json_plz({
-    change_name: {'name': name,}
+    change_name: {
+      'name': name
+    }
   }) )
 }
 
 var change_color = function(color){
   socket.send(json_plz({
-    change_color: {'color': color,}
+    change_color: {
+      'color': color
+    }
   }) )
 }
 
@@ -125,10 +129,10 @@ draw_node = function(node, par_id){
                   //attr('relation', id_for_html(par_id)).
                   draggable(draggable_options).
                   appendTo('#nodes').fadeIn(100);
-    initNode(obj);
     var par = $('#'+id_for_html(par_id));
     par.attr('relation',par.attr('relation')+','+html_id);
     obj.find('p').text( node.content || ' ' );
+    initNode(obj);
     if(node.subs) {
       $.each(node.subs, function(_,cur){
         draw_node(cur, id_for_json(html_id) )
@@ -167,8 +171,8 @@ var delete_node = function(id){
   // changing properties
 var edit_content = function(id, content){
   var obj = $("#"+id);
-  obj.width(obj.find(".body").width()+10+obj.find(".holder").width());
-  obj.height(obj.find(".body").height()+5);
+  obj.width(obj.find(".body").width()+3+obj.find(".holder").width());
+  obj.height(obj.find(".body").height()+10);
   socket.send(json_plz({
     edit_content: {'id': id_for_json(id), 'content': content,}
   }) )
@@ -188,18 +192,25 @@ var create_bubble = function(name){
   }) )
 }
 
+var append_user = function(id, cur){
+  $('ul#user_list').append('<li id="user_' + id + '" style="color:' + cur.color + '">' + cur.name + '</li>')
+}
+
 // triggers
 
 $('#change_name_form').submit(function(){
-  var name = 'unicorn' // ...
+  var name = $(this).find('input[type=text]').val()
+  var color = $(this).find('#colorpicker div').css('backgroundColor')
   change_name(name)
+  change_color(color)
   return false
 })
 
+/*
 $('#change_color').live('click',function(){
   var color = 'blue' // ...
   change_color(color)
-})
+})*/
 
 $('.add_node').live('click', function(){
   var to_id   = id_for_json( get_node_id(this) )
@@ -270,7 +281,7 @@ $("input.in-place-edit").live('blur', function () {
 
 // socket test code ...
 socket.on('message', function(msg) {
-  console.log('message incoming: ' + msg);
+  console.log('message incoming: ', msg);
   msg = JSON.parse( msg )
   
   for ( prop in  msg){
@@ -282,13 +293,19 @@ socket.on('message', function(msg) {
         break;case 'error':
           console.log('ERROR: ' + val.msg)
         break;case 'registered':
-          //draw_all_nodes(val.root_node)
+          append_user(val.id, val)
+        break;case 'left':
+          fade_and_remove( $('#user_' + val.id) )
         break;case 'node_data':
           draw_all_nodes(val.bubble)
+          for (cur in val.bubble.users){
+            append_user(cur, val.bubble.users[cur])
+          }
         break;case 'name_changed':
-          // .. 
+          $('#user_' + val.id).text( val.name )
         break;case 'color_changed':
-          // .. 
+          $('#user_' + val.id).css('color', val.color)
+          $('.user_' + val.id).css('border', '1px solid ' + val.color)
         break;case 'node_added':
           draw_node({content: val.content, }, val.to)
         break;case 'node_moved':
@@ -298,7 +315,7 @@ socket.on('message', function(msg) {
         break;case 'position_changed':
           // .. 
         break;case 'content_edited':
-        
+          $('#' + id_for_html(val.id) + ' p').text(val.content)
           // .. 
         break;case 'bubble_created':
           location.href = '/' + val.hash
@@ -318,7 +335,20 @@ var initial_name = 'chaot' // ...
 var initial_color = 'red' // ...
 register(initial_name, initial_color, location.pathname.slice(1)) // TODO hidden field
 
-//$('#colorpicker').ColorPicker()
+$('#colorpicker').ColorPicker({
+	color: '#0000ff',
+	onShow: function (colpkr) {
+		$(colpkr).fadeIn(500);
+		return false;
+	},
+	onHide: function (colpkr) {
+		$(colpkr).fadeOut(500);
+		return false;
+	},
+	onChange: function (hsb, hex, rgb) {
+		$('#colorpicker div').css('backgroundColor', '#' + hex);
+	}
+})
 
 // close (document ready)
 });
