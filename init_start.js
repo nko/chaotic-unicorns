@@ -17,6 +17,7 @@ client.open(function() {
         var mind = db.create_node('Mind Maps');
         mind.subs.push(db.create_node('Develope ideas'));
         mind.subs.push(db.create_node('Be creative'));
+        mind.subs.push(db.create_node('Organize your chaos'));
         root.subs.push(mind);
 
         var pers = db.create_node('Persistency');
@@ -28,7 +29,16 @@ client.open(function() {
         var co = db.create_node('Collaboration');
         co.subs.push(db.create_node('Invite friends'));
         co.subs.push(db.create_node('Read only access included'));
+        co.subs.push(db.create_node('Share your ideas'));
         root.subs.push(co);
+
+        var use = db.create_node('Usage');
+        use.subs.push(db.create_node('Spread the links above to colaborate'));
+        root.subs.push(use);
+
+        var nodes = db.create_node('Nodes');
+        nodes.subs.push(db.create_node('Drag&'));
+        use.subs.push(nodes);
         
         var start_tree = {
             content:    'Welcome',
