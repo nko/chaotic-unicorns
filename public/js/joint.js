@@ -1,10 +1,10 @@
 
 // spring vars
 
-var spring_length = 200;
-var spring_strength = 100;
-var spring_mass = 150;
-var spring_charge = 4223;
+var spring_length = 20;
+var spring_strength = 10;
+var spring_mass = 15;
+var spring_charge = 42;
 
 // helper
 
@@ -116,9 +116,9 @@ var updateSprings = function (_dt) {
                                 var atr = position_helper(offset, another);
                                 var diff = vsub(atr.position,src.position);
                                 var dir = vnorm(diff);
-                                var difflen = spring_length/10 - diff.x*diff.x - diff.y*diff.y; //vmag(diff)^2
-                                if(difflen > 1e5)
-                                  accel = vadd(accel,vmul(dir, (spring_charge*spring_charge)/difflen));
+                                var difflen = spring_length*200 - diff.x*diff.x - diff.y*diff.y; //vmag(diff)^2
+                                if(Math.abs(difflen) > 1e2)
+                                  accel = vadd(accel,vmul(dir, (spring_charge*spring_charge)/-difflen));
                             }
                         });
                         //save
