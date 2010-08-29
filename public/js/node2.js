@@ -12,13 +12,18 @@ var initNode = function (_node) {
         function () {$(this).removeClass("fixed");}
     );
     var h = holder.height();//var h = holder.parent().find(".body").height();
+    holder.width('20px');
     holder.animate({width:'-=15px', height:h+"px"}, 500);
     holder.hover(
-        function () {$(this).animate({width:'+=15px'}, 100).parent().animate({marginLeft:'-=15px',width:'+=15px'},100);},//handleIn
-        function () {$(this).animate({width:'-=15px'}, 100).parent().animate({marginLeft:'+=15px',width:'-=15px'},100);} //handleOut
+        function () {$(this).animate({width:'+=15px'}, 100, function () {
+            $(this).css("overflow","visible");
+        }).parent().animate({marginLeft:'-=15px',width:'+=15px'},100);},//handleIn
+        function () {
+            $(this).css("overflow","hidden");
+            $(this).animate({width:'-=15px'}, 100).parent().animate({marginLeft:'+=15px',width:'-=15px'},100);} //handleOut
     );
-    node.css({height:Math.max(body.height(),holder.height())+2,
-               width:holder.width()+body.width()+2,
+    node.css({height:Math.max(body.height(),holder.height())+5,
+               width:holder.width()+body.width()+5,
                position:"absolute"
              });
 };
