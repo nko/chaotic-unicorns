@@ -28,7 +28,6 @@ body{
   .set_font();
 }
 
-
 #title_bar {
   .init_bar();
   width:80%;
@@ -168,6 +167,11 @@ body{
   top:50%;
   left:50%;
   z-index:101;
+  .holder {
+    .delete_node.button {
+      display:none;
+    }
+  }
   .body {
     font-weight:bold;
     font-size:105%;
