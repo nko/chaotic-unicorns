@@ -411,14 +411,14 @@ socket.on('message', function(msg) {
           
           if( val.bubble.hasOwnProperty('hashes') ){
               hash_string = ''
-              if( val.bubble.hashes.length == 3 ){
-                hash_string = hash_string.concat( '<a href="' + location.host + '/' + val.bubble.hashes[0] + '">admin version</a>' )
-              }
+//              if( val.bubble.hashes.length == 3 ){
+  //              hash_string = hash_string.concat( '<a href="' + location.host + '/' + val.bubble.hashes[0] + '">admin version</a>' )
+    //          }
               
               if( val.bubble.hashes.length >= 2 ){
-                hash_string = hash_string.concat( '<a href="' + location.host + '/' + (val.bubble.hashes[val.bubble.hashes.length - 2]) + '">read-only version</a>')
+                hash_string = hash_string.concat( '<a href="http://' + location.host + '/' + (val.bubble.hashes[val.bubble.hashes.length - 2]) + '">main version,</a> ')
               }
-              hash_string = hash_string.concat( '<a href="' + location.host + '/' + val.bubble.hashes[val.bubble.hashes.length - 1] + '">read-only version</a>')
+              hash_string = hash_string.concat( '<a href="http://' + location.host + '/' + val.bubble.hashes[val.bubble.hashes.length - 1] + '">read-only version</a>')
               
               if( val.bubble.hashes.length == 0 ){
                 READONLY = true
@@ -500,7 +500,7 @@ $('#colorpicker').ColorPicker({
 })
 
 $('#real_time').click(function(){
-  
+    ani_man.toggle();
 })
 // close (document ready)
 });

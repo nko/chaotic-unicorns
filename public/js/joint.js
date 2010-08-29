@@ -98,6 +98,14 @@ var springsPhysics = function () {
                 }
             };
             
+            manager.toggle = function() {
+                if(interval === undefined) {
+                    start();
+                } else {
+                    stop()
+                }
+            };
+            
             return manager;
         };
         var add = function (nodeid,parid) {return add_node(engine,nodeid,parid);};
