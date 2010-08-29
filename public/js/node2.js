@@ -22,13 +22,13 @@ var initNode = function (_node) {
         function () {
             var h = Math.max(holder_min_height,10+parseInt($(this).parent().find(".body").height()));
             $(this).find(".button").css("visibility","visible");
-            $(this).animate({width:'+=15px', height:h}, 60, function () {
+            $(this).animate({width:'+=15px', height:h}, 50, function () {
                 $(this).css("overflow","visible");
             }).parent().animate({left:'-=15px',width:'+=16px'},50);},//handleIn
         function () {
             var h = 10+parseInt($(this).parent().find(".body").height());
             $(this).css("overflow","hidden");
-            $(this).animate({width:'-=15px', height:h}, 100, function () {
+            $(this).animate({width:'-=15px', height:h}, 50, function () {
                 $(this).find(".button").css("visibility","hidden");
             }).parent().animate({left:'+=15px',width:'-=16px'},50);} //handleOut
     );
@@ -40,7 +40,9 @@ var initNode = function (_node) {
 
 $(".node").each(function (_, _node) {initNode(_node);});
 //updateCanvas();
-setInterval("springsPhysics.generate().pre_render(100,10)",100);
+setTimeout("springsPhysics.generate().pre_render(10,23)",3000);
+//setInterval("springsPhysics.generate().pre_render(100,23)",100);
+setInterval("springsPhysics.generate().static()",20);
 
 
 //cookies
@@ -91,6 +93,7 @@ if( !initial_name ){ initial_color = 'black' }
 
 // draggable
 var draggable_options = {
+    stop: function () { springsPhysics.generate().pre_render(10,23,2000); }
   //drag:updateCanvas
 }
 var droppable_options = {

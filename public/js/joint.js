@@ -7,7 +7,7 @@ var springsPhysics = function () {
             length:   100,
             strength: 500,
             mass:     342,
-            charge:   1000,
+            charge:   800,
             friction: 0.9,
         };
 
@@ -50,14 +50,16 @@ var springsPhysics = function () {
             var dt = ms / 1000;
             for(var i = 0 ; i < nr ; i++) simulate(engine, dt);
         };
-        var pre_render = function (/*time in millisec*/ ms, /*number of steps*/ nr) {
+        var pre_render = function (/*time in millisec*/ ms, /*number of steps*/ nr, /*animation time*/ anims) {
             step(ms, nr);
-            var dt = ms / 1000;
-            animate(engine, dt);
+            if(typeof(anims) == "undefined") var ani = ms; else  var ani = anims;
+            animate(engine, ani);
             draw(engine);
             return engine;
         };
-        return {realtime:realtime, step:step, pre_render:pre_render};
+        var static = function() {draw(engine); return engine;};
+        return {realtime:realtime, step:step, pre_render:pre_render,
+                static:static};
     };
 
     var build = system.build = function (params) {
@@ -120,11 +122,12 @@ var springsPhysics = function () {
                     var diff = vsub(node.position,other.position);
                     var dir = vnorm(diff);
                     var threshold = engine.params.length + node.size;
-                    var difflen = diff.x*diff.x -
+                    var difflen = diff.x*diff.x +
                                   diff.y*diff.y; //vmag(diff)^2 //<- calc stuff
-                    if(Math.abs(difflen) < threshold)
+                    var difflen = vmag(diff); //<- calc stuff
+                    if(difflen < threshold)
                         difflen = (1 - difflen/threshold) * threshold;
-                    if(Math.abs(difflen) > 1e2)
+                    if(difflen > 1e2)
                         accel = vadd(accel,vmul(dir,
                             (other.charge*other.charge)/difflen));
                     else accel = vadd(accel,vmul(dir,threshold));
