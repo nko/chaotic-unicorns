@@ -4,16 +4,15 @@ var max = function (s1,s2) {if(s1>s2) return s1; else return s2};
 
 var vmag = function (vec) {return Math.sqrt(vec.x*vec.x+vec.y*vec.y);};
 var vmul = function (vec,a) {return {x: vec.x*a, y: vec.y*a}};
-var vnorm = function (vec) {return vmul(vec, 1 / vmag(vec));};
+var vnorm = function (vec) {if(vec.x == 0 && vec.y == 0) return vec; else return vmul(vec, 1 / vmag(vec));};
 var vadd = function (a,b) {return {x:a.x+b.x, y:a.y+b.y};};
 var vsub = function (a,b) {return {x:a.x-b.x, y:a.y-b.y};};
 
 // spring vars
 
-var spring_length = 140;
+var spring_length = 200;
 var spring_strength = 100;
 var spring_mass = 150;
-var spring_charge = 235;
 
 // canvas
 
@@ -56,6 +55,7 @@ var updateCanvas = function () {
 
 var initSpring = function (_node) {$(_node).attr('speed',"0,0");};
 
+
 var updateSprings = function (_dt) {
     var dt = parseFloat(_dt);
     var obj = $("#canvas");
@@ -82,7 +82,7 @@ var updateSprings = function (_dt) {
                         var trgpos = {x:trg_offset.left - offset.left + trg_mid.left,
                                       y:trg_offset.top - offset.top + trg_mid.top};
                         // some accel calc
-                        var diff = vsub(srcpos, trgpos);
+                        var diff = vsub(trgpos, srcpos);
                         var dir = vnorm(diff);
                         var difflen = vmag(diff) - spring_length;
                         var accel = vmul(dir, difflen * spring_strength);
