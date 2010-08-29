@@ -1,7 +1,10 @@
 #title_bar
-  #title= title
+  #title
+    map your mind
+= partial('node', [{text:" _", id: "protonode", rel:''}])
+#nodes.fullscreen
+  %canvas#canvas.fullscreen
 
-Bubble erstellen
 %form{id: 'create_bubble_form' ,style: 'position:fixed;bottom:0px;left:0px;z-index:9999'}
   %input{type: 'text', name: 'name'}
   %input{type: 'submit', value: 'create bubble'}

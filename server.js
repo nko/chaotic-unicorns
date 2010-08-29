@@ -35,7 +35,7 @@ db.connect(function(dbc) {
     // Routes
 
     app.get('/', function(req, res){
-        res.render('index.haml', {
+        res.render('start.haml', {
             locals: {
                 title: 'Node²'
             }
@@ -102,33 +102,37 @@ db.connect(function(dbc) {
                     bubble = dbc.get_bubble(d.hash);
                     bubble.create_user(d.name, d.color, function(res) {   
                         user = res;
-                                         
-                        // sending the tree
-                        bubble.get_tree(function(tree) {
-                            console.log("tree:");
-                            console.log(tree);
-                            
-                            if(tree) {
-                                for(var n = 0; n < tree.hashes.length; n++) {
-                                    if(tree.hashes[n] == d.hash) {
-                                        console.log("rights: " + n);
-                                        rights = n;
+                        
+                        if(user) {
+                            // sending the tree
+                            bubble.get_tree(function(tree) {
+                                console.log("tree:");
+                                console.log(tree);
+                                
+                                if(tree) {
+                                    for(var n = 0; n < tree.hashes.length; n++) {
+                                        if(tree.hashes[n] == d.hash) {
+                                            console.log("rights: " + n);
+                                            rights = n;
+                                        }
                                     }
+                                    
+                                    tree.hashes = tree.hashes.slice(0, rights + 1);
+                                    
+                                    client.send(JSON.stringify({node_data: {bubble: tree}}));
+                                    
+                                    // session management
+                                    session = session_manager.get(d.hash);
+                                    session.broadcast({registered: {name: d.name, color: d.color}})
+                                    session.add_client(client);
+                                } else {
+                                    // TODO: close connection?
+                                    error("Unknown Hash");
                                 }
-                                
-                                tree.hashes = tree.hashes.slice(0, rights + 1);
-                                
-                                client.send(JSON.stringify({node_data: {bubble: tree}}));
-                                
-                                // session management
-                                session = session_manager.get(d.hash);
-                                session.broadcast({registered: {name: d.name, color: d.color}})
-                                session.add_client(client);
-                            } else {
-                                // TODO: close connection?
-                                error("Unknown Hash");
-                            }
-                        });
+                            });
+                        } else {
+                            error("Unknown Hash");
+                        }
                     });
                 // create a bubble
                 } else if(stanza.create_bubble) {
@@ -141,29 +145,38 @@ db.connect(function(dbc) {
                 } else if(stanza.change_color) {
                     color = stanza.change_color.color;
                     user.set_color(color);
-                    session.broadcast({color_changed: {color: color}});
+                    session.broadcast(JSON.stringify({color_changed:{
+                      id:    user.id,
+                      color: color
+                    }}));
                 // change your name
                 } else if(stanza.change_name) {
                     name = stanza.change_name.name;
-                    user.set_name(name);
-                    session.broadcast({name_changed: {name: name}});
+                    user.rename(name);
+                    session.broadcast(JSON.stringify({name_changed: {
+                      id:   user.id,
+                      name: name,
+                    }}));
                 // write operations from here on
                 } else if(rights > 0) {
+                    // add a node
                     if(stanza.add_node) {
                         if(session) {
                             d = stanza.add_node;
-                            bubble.add_node(d.to, d.content, function() {
+                            bubble.add_node(d.to, d.content, user.id, function() {
                                 // tell your friends
                                 session.broadcast(JSON.stringify({
                                   node_added:{
                                     content: d.content,
                                     to: d.to,
+                                    user: user.id,
                                   }
                                 }) );
                             });
                         } else {
                             error("No session");
                         }
+                    // move a node
                     } else if(stanza.move_node) {
                         if(session) {
                             d = stanza.move_node;
@@ -179,9 +192,10 @@ db.connect(function(dbc) {
                         } else {
                             error("No session");
                         }
+                    // delete a node
                     } else if(stanza.delete_node) {
                         if(session) {
-                            bubble.del_node(stanza.delete_node, function() {
+                            bubble.del_node(stanza.delete_node.id, function() {
                                 // tell your friends
                                 session.broadcast(JSON.stringify({
                                   node_deleted:{
@@ -192,6 +206,7 @@ db.connect(function(dbc) {
                         } else {
                             error("No session");
                         }
+                    // edit a node
                     } else if(stanza.edit_content) {
                         if(session) {
                             d = stanza.edit_content;
