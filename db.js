@@ -198,7 +198,7 @@ exports.connect = function(cb) {
             }
             
             var del_node = bubble.del_node = function(position, cb) {
-                findOne({}, {'subs': 1}, function(res) {
+                findOne({}, {}, function(res) {
                     var diff, subs = res.subs, cur = subs;
                     
                     console.log("sub-move");
