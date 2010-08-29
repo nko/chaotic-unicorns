@@ -55,6 +55,11 @@ tree-path ([1,0,4])
 
     # bubble management
     create_bubble(name)
+    
+    # destructive stuff
+    # no idea how to implement this ...
+    kick(name)
+    destroy()
 
 ### Signals
 
@@ -100,7 +105,7 @@ tree-path ([1,0,4])
 node with
 
     {
-        id: 'hash',
+        hashes: ['ro_hash', 'rw_hash', 'admin_hash'],
         content: 'bubble name',
         subs: [$mindmap_node, ...],
         users: [{name: '', color: ''}, ...],
