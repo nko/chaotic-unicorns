@@ -183,7 +183,7 @@ exports.connect = function(cb) {
             var del_node = bubble.del_node = function(position, cb) {
                 var adress = "subs." + position.join('.subs.');
                 var diff = {};
-                diff[adress] = create_node(content);
+                diff[adress] = 1;
                 update({}, {'$unset': diff}, cb);
             }
             

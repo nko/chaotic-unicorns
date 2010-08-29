@@ -149,6 +149,7 @@ db.connect(function(dbc) {
                     session.broadcast({name_changed: {name: name}});
                 // write operations from here on
                 } else if(rights > 0) {
+                    // add a node
                     if(stanza.add_node) {
                         if(session) {
                             d = stanza.add_node;
@@ -164,6 +165,7 @@ db.connect(function(dbc) {
                         } else {
                             error("No session");
                         }
+                    // move a node
                     } else if(stanza.move_node) {
                         if(session) {
                             d = stanza.move_node;
@@ -179,9 +181,10 @@ db.connect(function(dbc) {
                         } else {
                             error("No session");
                         }
+                    // delete a node
                     } else if(stanza.delete_node) {
                         if(session) {
-                            bubble.del_node(stanza.delete_node, function() {
+                            bubble.del_node(stanza.delete_node.id, function() {
                                 // tell your friends
                                 session.broadcast(JSON.stringify({
                                   node_deleted:{
@@ -192,6 +195,7 @@ db.connect(function(dbc) {
                         } else {
                             error("No session");
                         }
+                    // edit a node
                     } else if(stanza.edit_content) {
                         if(session) {
                             d = stanza.edit_content;
