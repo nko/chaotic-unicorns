@@ -4,22 +4,8 @@
 
 * Homepage (+ bubble creation)
 * ...
-* user documentation
+* user documentation (start page creation with init_start.js)
 * "catch attention" with blinking nodes
-
-frontend
-
-* nodes positionierung
-* nodes moven
-* ...
-
-backend
-
-* ...
-
-jan
-
-* koord system bauen
 
 ## Naming Conventions
 
@@ -65,7 +51,7 @@ tree-path ([1,0,4])
 #### Personal Messages
 
     # error message
-    error(msg)
+    err(msg)
 
     # after registering
     node_data(bubble)
@@ -122,3 +108,27 @@ node with
         content: 'mindmap name',
         subs: [$node, ...],
     }
+
+
+### todo
+
+spawn-position (add)
+
+node body verschwindet bug
+
+client delete
+
+read-only mm
+z-index top
+destroy
+
+
+startseite
+
+error-style
+end-design
+
+#### maybe
+
+drehding vom start
+logout (left)

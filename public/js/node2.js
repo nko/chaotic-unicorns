@@ -114,7 +114,7 @@ $('#change_name').val( initial_name )
     $( "#error" ).dialog(
     {
 //        modal:true,
-        'position': [3,3],
+//        'position': [3,3],
         buttons:
         {
           "Ok": function() { $(this).dialog("close"); },
@@ -202,7 +202,7 @@ var change_color = function(color){
 
 // changing tree structure
 draw_node = function(node, par_id){
-  if(node)
+  if(node) {
     var html_id = id_for_html(par_id) + '_' + ($('.'+ id_for_html(par_id)).length )
     obj = $('#protonode').clone().
                   attr('id', html_id ).
@@ -499,5 +499,8 @@ $('#colorpicker').ColorPicker({
     }
 })
 
+$('#real_time').click(function(){
+  
+})
 // close (document ready)
 });
