@@ -66,7 +66,7 @@ db.connect(function(dbc) {
         var session_manager = session.session_manager();
         
         ios.on('connection', function(client) {
-            var bubble, session, user, rights;
+            var bubble, session, user, rights = 0;
             
             var error = function(msg) {
                 client.send(JSON.stringify({err: {msg: msg}}));
