@@ -1,6 +1,6 @@
 var mongo = require('./lib/mongodb');
 
-var random_hash = function() {
+var random_hash = exports.random_hash = function() {
     hash = "";
     for(var n = 0; n < 16; n++) {
         var rand = Math.floor(Math.random()*62);
@@ -19,7 +19,7 @@ var random_hash = function() {
     return hash;
 }
 
-var create_node = function(content, user) {
+var create_node = exports.create_node = function(content, user) {
     return {content: content, user: user, subs: []};
 }
 
@@ -94,11 +94,7 @@ exports.connect = function(cb) {
                             }
                         }
                         
-                        if(select === undefined) {
-                            coll.findOne(criteria, find_cb);
-                        } else {
-                            coll.findOne(criteria, select, find_cb);
-                        }
+                        coll.findOne(criteria, {fields: select}, find_cb);
                     }
                 });
             }
@@ -202,10 +198,38 @@ exports.connect = function(cb) {
             }
             
             var del_node = bubble.del_node = function(position, cb) {
+                var filter = 1, a;
+                for(var i = position.length - 2; i >= 0; i--) {
+                    a = {};
+                    a[position[i]] = filter;
+                    filter = {subs: a}
+                }
+                
+                console.log('filter:')
+                console.log(filter)
+                
+                findOne({}, filter, function(res) {
+                    if(err) {
+                        console.log('fehloer')
+                        console.log(err);
+                    } else {
+                        subs = res.subs;
+                        subs.splice(position[position.length-1], 1);
+                        
+                        var adress = "subs." + position.slice(0, -1).join('.subs.') + ".subs";
+                        var diff = {};
+                        diff[adress] = subs;
+                        
+                        update({}, {'$set': diff}, cb);
+                    }
+                });
+                
+                /*
                 var adress = "subs." + position.join('.subs.');
                 var diff = {};
                 diff[adress] = 1;
                 update({}, {'$unset': diff}, cb);
+                */
             }
             
             bubble.move_node = function(from, to, cb) {
@@ -216,7 +240,7 @@ exports.connect = function(cb) {
                 
                 findOne({}, filter, function(res) {
                     del_node(from, function() {
-                        add_node(to, res, function() {
+                        add_node(to, res[position[position.lenth-1]], function() {
                             cb(res);
                         });
                     });
