@@ -54,7 +54,7 @@ tree-path ([1,0,4])
     edit_content(id, content)
 
     # bubble management
-    create_bubble(name)
+    create_bubble(bubble_name, user_name, user_color)
     
     # destructive stuff
     # no idea how to implement this ...
@@ -83,7 +83,7 @@ tree-path ([1,0,4])
     color_changed(name, color)
 
     # changing tree structure
-    node_added(content, to)
+    node_added(content, to, user_id)
     node_moved(id, to)
     node_deleted(id)
 
@@ -96,6 +96,7 @@ tree-path ([1,0,4])
 ### node
 
     {
+        user: creator_id
         content: '',
         subs: [$node, ...],
     }
@@ -108,7 +109,7 @@ node with
         hashes: ['ro_hash', 'rw_hash', 'admin_hash'],
         content: 'bubble name',
         subs: [$mindmap_node, ...],
-        users: [{name: '', color: ''}, ...],
+        users: {id: {name: '', color: ''}, ...},
     }
 
 ### mindmap

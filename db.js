@@ -34,8 +34,8 @@ exports.connect = function(cb) {
     client.open(function(err, client) {
         var con = {client: client};
         
-        con.create_bubble = function(content, cb) {
-            var bubble, mindmap, node;
+        con.create_bubble = function(content, name, color, cb) {
+            var bubble, mindmap, node, user_id = 23;
             
             console.log("creating bubble")
             
@@ -47,13 +47,13 @@ exports.connect = function(cb) {
                 } else {
                     console.log("collection found");
                     
-                    node = create_node(content);
+                    node = create_node(content, user);
                     mindmap = {content: content, subs: [node]};
                     bubble = {
                         hashes: [random_hash(), random_hash(), random_hash()],
                         content: content,
                         subs: [mindmap],
-                        users: {},
+                        users: {23: {name: name, color: color}},
                     };
                     
                     coll.insert(bubble, function(err, res) {

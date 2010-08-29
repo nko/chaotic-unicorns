@@ -144,7 +144,8 @@ db.connect(function(dbc) {
                         });
                     // create a bubble
                     } else if(stanza.create_bubble) {
-                        dbc.create_bubble(stanza.create_bubble.name, function(bubble) {
+                        d = stanza.create_bubble
+                        dbc.create_bubble(d.bubble_name, d.user_name, d.user_color, function(bubble) {
                             client.send(JSON.stringify({
                                 bubble_created: {hash: bubble.hash},
                             }));
