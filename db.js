@@ -198,11 +198,17 @@ exports.connect = function(cb) {
             }
             
             var del_node = bubble.del_node = function(position, cb) {
-                var filter = 1, a;
-                for(var i = position.length - 2; i >= 0; i--) {
-                    a = {};
-                    a[position[i]] = filter;
-                    filter = {subs: a}
+                var filter, tmp;
+                
+                if(position.length == 1) {
+                    filter = {}
+                } else {
+                    filter = 1;
+                    for(var i = position.length - 2; i >= 0; i--) {
+                        a = {};
+                        a[position[""+i]] = filter;
+                        filter = {subs: a}
+                    }
                 }
                 
                 console.log('filter:')
