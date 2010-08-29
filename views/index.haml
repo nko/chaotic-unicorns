@@ -4,7 +4,7 @@
 
 #tool_bar
   .button
-     tool1
+    tool1
   .button tool2
   .button tool3
 
@@ -14,11 +14,18 @@
 
 
 %form{id: 'change_name_form' ,style: 'position:fixed;bottom:0px;right:0px;z-index:9999'}
-  %input{type: 'text', name: 'name'}
+  %input{type: 'text',   name: 'name'}
+  %input{type: 'hidden', name: 'color'}
   %input{type: 'submit', value: 'change name'}
-  %input#colorpicker
-
+  %div#colorpicker
+    %div{style:"background-color: #0000ff"}
+       .
   
 %form{id: 'create_bubble_form' ,style: 'position:fixed;bottom:0px;left:0px;z-index:9999'}
   %input{type: 'text', name: 'name'}
   %input{type: 'submit', value: 'create bubble'}
+
+
+%ul#user_list
+%form{id: 'metaform',style: 'display:none'}
+  %input{id: 'current_user', type: 'hidden'}
