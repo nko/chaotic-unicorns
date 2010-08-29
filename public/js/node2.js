@@ -346,7 +346,10 @@ socket.on('message', function(msg) {
         break;case 'position_changed':
           // .. 
         break;case 'content_edited':
-          $('#' + id_for_html(val.id) + ' p').text(val.content)
+          $('#' + id_for_html(val.id) + ' p').text(val.content);
+          var obj = $("#"+id_for_html(val.id));
+          obj.width(obj.find(".body").width()+10+obj.find(".holder").width());
+          obj.height(obj.find(".body").height()+10);
           // .. 
         break;case 'bubble_created':
           location.href = '/' + val.hash

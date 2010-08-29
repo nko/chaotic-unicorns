@@ -34,6 +34,7 @@ var springsPhysics = function () {
 
     // library
 
+    // header ---
     var system = {};
     var constructor = system.generate = function (params) {
         if(typeof(params) == "undefined") params = _default;
@@ -43,25 +44,28 @@ var springsPhysics = function () {
             var dt = ms / 1000;
             simulate(engine, dt);
             animate(engine, dt);
-            draw(engine);
-            return engine;
+            return draw(engine);
         };
         var step = function (/*time in millisec*/ ms, /*number of steps*/ nr) {
             var dt = ms / 1000;
             for(var i = 0 ; i < nr ; i++) simulate(engine, dt);
+            return engine;
         };
         var pre_render = function (/*time in millisec*/ ms, /*number of steps*/ nr, /*animation time*/ anims) {
             step(ms, nr);
             if(typeof(anims) == "undefined") var ani = ms; else  var ani = anims;
             animate(engine, ani);
-            draw(engine);
-            return engine;
+            return draw(engine);
         };
-        var static = function() {draw(engine); return engine;};
+        var add = function (nodeid) {return add_node(engine,nodeid);};
+        var update = function (nodeid) {return update_node(engine,nodeid);};
+        var remove = function (nodeid) {return remove_node(engine,nodeid);};
+        var static = function () {return draw(engine);};
         return {realtime:realtime, step:step, pre_render:pre_render,
                 static:static};
     };
 
+    // body ---
     var build = system.build = function (params) {
         if(typeof(params) == "undefined") params = _default;
         var nodes = {}, joints = [];
@@ -176,6 +180,65 @@ var springsPhysics = function () {
             var pos = vsub(node.position, node.middle);
             node.object.animate({left:pos.x, top:pos.y}, dt);
         });
+        return engine;
+    };
+
+    var update_node = system.update_node = function (engine, nodeid) {
+        if(nodeid in engine.nodes) {
+            var window = $("#nodes");
+            var node = engine.nodes[nodeid];
+            var composition = _position_helper(window.offset(), node.object);
+            node.position = composition.position;
+            node.middle = composition.offset;
+            node.offset = composition.middle;
+            node.size = composition.size;
+        }
+        return engine;
+    };
+
+    var add_node = system.add_node = function (engine, nodeid) {
+        var window = $("#nodes");
+        var current = $(nodeid);
+        var composition = _position_helper(window.offset(), current);
+        engine.nodes[current[0].id] = cur_node = {
+                id: current[0].id,
+                object: current,
+                position: composition.position,
+                middle: composition.middle,
+                offset: composition.offset,
+                size: composition.size,
+                acceleration: {x:0, y:0},
+                speed: {x:0, y:0},
+                charge: engine.params.charge,
+                mass: engine.params.mass,
+                friction: engine.params.friction,
+                joints: {},
+            };
+        $.each(current.attr("relation").split(","),function (_,relation) {
+            if(relation != "") {
+                var target = $("#"+relation);
+                if(target.length) {
+                    engine.nodes[cur_node.id].joints[target[0].id] =
+                        engine.joints.push({
+                            source: cur_node,
+                            target: engine.nodes[target[0].id], // error source
+                            length: engine.params.length,
+                            strength: engine.params.strength,
+                        });
+                }
+            }
+        });
+        return engine;
+    };
+
+    var remove_node = system.remove_node = function (engine, nodeid) {
+        if(nodeid in engine.nodes) {
+            var node = engine.nodes[nodeid];
+            $each(node.joints, function (_, joint) {
+                engine.joints.index(joint);
+            });
+            delete engine.nodes[nodeid];
+        }
         return engine;
     };
 
