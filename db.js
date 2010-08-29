@@ -95,10 +95,8 @@ exports.connect = function(cb) {
                         }
                         
                         if(select === undefined) {
-                            console.log('single');
                             coll.findOne(criteria, find_cb);
                         } else {
-                            console.log('multi');
                             coll.findOne(criteria, select, find_cb);
                         }
                     }

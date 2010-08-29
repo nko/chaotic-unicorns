@@ -88,7 +88,13 @@ db.connect(function(dbc) {
                 console.log("incoming: " + msg);
                 stanza = JSON.parse(msg);
                 
+                // enter a chat
                 if(stanza.register) {
+                    if(session) {
+                        error("Already attached to a session");
+                        return;
+                    }
+                    
                     // TODO: move bubble into session?
                     d = stanza.register
                     
@@ -124,80 +130,88 @@ db.connect(function(dbc) {
                             }
                         });
                     });
+                // create a bubble
                 } else if(stanza.create_bubble) {
                     dbc.create_bubble(stanza.create_bubble.name, function(bubble) {
                         client.send(JSON.stringify({
                             bubble_created: {hash: bubble.hash},
                         }));
                     });
+                // change your color
                 } else if(stanza.change_color) {
                     color = stanza.change_color.color;
                     user.set_color(color);
                     session.broadcast({color_changed: {color: color}});
+                // change your name
                 } else if(stanza.change_name) {
                     name = stanza.change_name.name;
                     user.set_name(name);
                     session.broadcast({name_changed: {name: name}});
-                } else if(stanza.add_node) {
-                    if(session) {
-                        d = stanza.add_node;
-                        bubble.add_node(d.to, d.content, function() {
-                            // tell your friends
-                            session.broadcast(JSON.stringify({
-                              node_added:{
-                                content: d.content,
-                                to: d.to,
-                              }
-                            }) );
-                        });
+                // write operations from here on
+                } else if(rights > 0) {
+                    if(stanza.add_node) {
+                        if(session) {
+                            d = stanza.add_node;
+                            bubble.add_node(d.to, d.content, function() {
+                                // tell your friends
+                                session.broadcast(JSON.stringify({
+                                  node_added:{
+                                    content: d.content,
+                                    to: d.to,
+                                  }
+                                }) );
+                            });
+                        } else {
+                            error("No session");
+                        }
+                    } else if(stanza.move_node) {
+                        if(session) {
+                            d = stanza.move_node;
+                            bubble.add_moved(d.id, d.to, function() {
+                                // tell your friends
+                                session.broadcast(JSON.stringify({
+                                  node_added:{
+                                    id: d.id,
+                                    to: d.to,
+                                  }
+                                }) );
+                            });
+                        } else {
+                            error("No session");
+                        }
+                    } else if(stanza.delete_node) {
+                        if(session) {
+                            bubble.del_node(stanza.delete_node, function() {
+                                // tell your friends
+                                session.broadcast(JSON.stringify({
+                                  node_deleted:{
+                                    id: stanza.delete_node.id,
+                                  }
+                                }) );
+                            });
+                        } else {
+                            error("No session");
+                        }
+                    } else if(stanza.edit_content) {
+                        if(session) {
+                            d = stanza.edit_content;
+                            bubble.edit_node(d.id, d.content, function() {
+                                // tell your friends
+                                session.broadcast(JSON.stringify({
+                                  content_edited:{
+                                    id: d.id,
+                                    content: d.content,
+                                  }
+                                }) );
+                            });
+                        } else {
+                            error("No session");
+                        }
                     } else {
-                        error("No session");
-                    }
-                } else if(stanza.move_node) {
-                    if(session) {
-                        d = stanza.move_node;
-                        bubble.add_moved(d.id, d.to, function() {
-                            // tell your friends
-                            session.broadcast(JSON.stringify({
-                              node_added:{
-                                id: d.id,
-                                to: d.to,
-                              }
-                            }) );
-                        });
-                    } else {
-                        error("No session");
-                    }
-                } else if(stanza.delete_node) {
-                    if(session) {
-                        bubble.del_node(stanza.delete_node, function() {
-                            // tell your friends
-                            session.broadcast(JSON.stringify({
-                              node_deleted:{
-                                id: stanza.delete_node.id,
-                              }
-                            }) );
-                        });
-                    } else {
-                        error("No session");
-                    }
-                } else if(stanza.edit_content) {
-                    if(session) {
-                        d = stanza.edit_content;
-                        bubble.edit_node(d.id, d.content, function() {
-                            // tell your friends
-                            session.broadcast(JSON.stringify({
-                              content_edited:{
-                                id: d.id,
-                                content: d.content,
-                              }
-                            }) );
-                        });
-                    } else {
-                        error("No session");
+                        error("Unknown method");
                     }
                 } else {
-                    error("Unknown method");
+                    error("Not a read-only method");
                 }
             });
         });
