@@ -58,7 +58,6 @@ tree-path ([1,0,4])
     
     # destructive stuff
     # no idea how to implement this ...
-    kick(name)
     destroy()
 
 ### Signals
@@ -90,6 +89,9 @@ tree-path ([1,0,4])
     # changing properties
     position_changed(id, $DODO_FRAGEN)
     content_edited(id, content)
+    
+    # involuntary quit
+    destroyed()
 
 ## Data Structure
 

@@ -11,8 +11,9 @@ var express = require('express'),
     db = require('./db');
 
 var error_catcher = function(error) {
-    console.log("EXCEPION");
-    console.log(e);
+    console.log("EXCEPTION");
+    console.log(error);
+    console.log(error.stack)
 }
 
 db.connect(function(dbc) {
@@ -93,6 +94,12 @@ db.connect(function(dbc) {
             client.on('error', error_catcher)
         
             client.on('message', function(msg) {
+                if(session && !session.alive) {
+                    console.log('clearing client from destroyed session');
+                    console.log(session.alive)
+                    session = null;
+                }
+                
                 try {
                     console.log("incoming: " + msg);
                     stanza = JSON.parse(msg);
@@ -131,10 +138,14 @@ db.connect(function(dbc) {
                                     bubble.create_user(d.name, d.color, function(res) {
                                         user = res;
                                         
+                                        console.log('adding session to client');
+                                        
                                         // user/session management
                                         session = session_manager.get(d.hash);
                                         session.broadcast({registered: {name: d.name, color: d.color}})
                                         session.add_client(client);
+                                        
+                                        console.log(session)
                                     });
                                 }
                             } else {
@@ -237,14 +248,21 @@ db.connect(function(dbc) {
                         } else {
                             error("No write permissions");
                         }
+                    // close the bubble
+                    } else if(stanza.destroy) {
+                        if(session && rights > 1) {
+                            session.destroy();
+                            bubble.destroy();
+                        } else {
+                            error("Not enough permissions");
+                        }
                     } else {
                         error("Unknown method");
                     }
                 }
                 catch(e)
                 {
-                    console.log("EXCEPION");
-                    console.log(e);
+                    error_catcher(e);
                 }
             });
         });

@@ -47,7 +47,7 @@ exports.connect = function(cb) {
                 } else {
                     console.log("collection found");
                     
-                    node = create_node(content, user);
+                    node = create_node(content, user_id);
                     mindmap = {content: content, subs: [node]};
                     bubble = {
                         hashes: [random_hash(), random_hash(), random_hash()],
@@ -59,6 +59,7 @@ exports.connect = function(cb) {
                     coll.insert(bubble, function(err, res) {
                         if(err) {
                             console.log(err);
+                            console.log(err.stack)
                             cb(null);
                         } else {
                             console.log("bubble created");
@@ -228,6 +229,12 @@ exports.connect = function(cb) {
                             cb(res);
                         });
                     });
+                });
+            }
+            
+            bubble.destroy = function() {
+                client.collection('bubbles', function(err, coll) {
+                    coll.remove({hashes: hash});
                 });
             }
             
