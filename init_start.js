@@ -10,7 +10,6 @@ var client = new mongo.Db('node2', new mongo.Server(host, port, {}));
 client.open(function() {
     client.collection('bubbles', function(err, coll) {
         var map = db.create_node('Welcome');
-        map.subs.push(root);
 
         var root = db.create_node('Welcome');
         map.subs.push(root);
